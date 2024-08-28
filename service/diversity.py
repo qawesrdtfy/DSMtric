@@ -20,4 +20,5 @@ def class_diversity(Y:list):
     score=zoom(score,therange[0],therange[1])
     return score
 
+# 函数列表，元素为[指标名，触发函数，计算函数]
 diversity_funclist=[["类别多样性",trig_class_diversity,class_diversity]]
