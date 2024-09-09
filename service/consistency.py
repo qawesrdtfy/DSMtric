@@ -1,7 +1,9 @@
 import numpy as np
 from statsmodels.stats.inter_rater import fleiss_kappa
 from rouge_chinese import Rouge
-from ..tools.funcs import *
+# from ..tools.funcs import *
+from loadmodel import QwenVL
+import jieba
 rouge=Rouge()
 
 
@@ -60,7 +62,8 @@ def content_consistency(Y_per_annotater:list):
     all_scores=[]
     for sample in Y_per_annotater:
         scores=[]
-        sample_splited=[' '.join(list(one)) for one in sample]
+        # sample_splited=[' '.join(list(one)) for one in sample]
+        sample_splited=[jieba.lcut(item) for item in sample]
         for i,annotated1 in enumerate(sample_splited):
             for j,annotated2 in enumerate(sample_splited):
                 if i==j:
@@ -69,6 +72,26 @@ def content_consistency(Y_per_annotater:list):
         score=sum(scores)/len(scores)
         all_scores.append(score)
     return round(sum(all_scores)/len(all_scores),4)
+
+
+def image_text_consistancy(X_images = [], Y = []):
+    '''
+    图文内容一致性  --图像转文本模型，rougel相似度
+    :X_images: 图片url列表
+    :Y:图片描述
+    :return:图文内容一致性得分，范围0～1
+    '''
+    if len(X_images) != len(Y):
+        raise ValueError("两个列表的长度不相同")
+    
+    all_scores=[]
+    for i,item in enumerate(X_images):
+        text = QwenVL.askmodel("请你用简短的语言描述一下图片的内容。",item)
+        textx = ' '.join(jieba.lcut(text))
+        texty = ' '.join(jieba.lcut(Y[i]))
+        all_scores.append(rouge.get_scores(textx,texty)[0]['rouge-l']['f'])
+    return round(sum(all_scores)/len(all_scores),4)
+    
 
 
 # 函数列表，元素为[指标名，触发函数，计算函数]
