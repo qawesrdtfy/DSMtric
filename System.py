@@ -45,10 +45,15 @@ def metric():
             formResult = {"resultinfo":f'{username}的“{datasetname}”数据集评测启动失败，存储空间构建失败！{e}'}
             print('Abnormal Reponse:',formResult)
             return jsonify(formResult)
-        # 存储数据集
+        # 存储并解压数据集
         try:
-            with open(f'{dataset_dir}/data.save', 'wb') as file:
+            # 貌似图像等会是好多个文件，所以需要人家发来个压缩包，然后咱保存了之后要解压
+            # 要求解压后产生文件夹X和Y，X和Y内是模态为名的文件夹
+            with open(f'{dataset_dir}/data.tar.gz', 'wb') as file:
                 file.writelines(dataset.readlines())
+            command = ["tar", "-xzvf", f'{dataset_dir}/data.tar.gz']
+            process = subprocess.Popen(command, stdout=file, stderr=file, cwd='.')
+            process.wait()
         except Exception as e:
             deal_dir(username,datasetname,mode=1)
             formResult = {"resultinfo":f'{username}的“{datasetname}”数据集评测启动失败，数据集读取或存储失败！{e}'}
