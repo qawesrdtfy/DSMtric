@@ -1,6 +1,8 @@
 # -*- encoding:utf -*-
 import os
 import json
+from config.Data import Data
+from tools.readata import read_XY
 from service.consistency import consistency_funclist
 from service.diversity import diversity_funclist
 from service.normative import normative_funclist
@@ -36,11 +38,11 @@ def main(args):
     dataset_dir=f'data/dataset/{args.username}-{args.datasetname}'
     result_dir=f'data/result/{args.username}-{args.datasetname}'
     print('合并数据集和元数据')
-    X=read_X(dataset_dir)
-    Y=read_Y(result_dir)
+    X,Y=read_XY(dataset_dir)
     data=json.loads(args.metadata)
     data['X']=X
     data['Y']=Y
+    data=Data(data)
     print('判断指标是否可用')
     cons_trigged, divers_trigged, norma_trigged=trig(data)
     print('计算每个指标的分数')
