@@ -8,7 +8,7 @@ class DocEncoder:
         self.device = device
         self.max_length = max_length
 
-    def encode(self, docs:list) -> np.ndarray:
+    def encode(self, docs:list) -> list:
         tknzd = self.tokenizer.batch_encode_plus(docs,add_special_tokens=False,padding='max_length',truncation=True,max_length=self.max_length,return_tensors='pt').to(self.device)
         encoded=self.model(tknzd['input_ids'],tknzd['attention_mask'])['pooler_output']
         return encoded.cpu().tolist()
