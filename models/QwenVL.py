@@ -9,8 +9,9 @@ class VLmodel:
         self.model = Qwen2VLForConditionalGeneration.from_pretrained(modelname, torch_dtype="auto", device_map="auto")
         self.processor = AutoProcessor.from_pretrained(modelname)
         self.device = "cuda"
-
-    def askmodel(self,prompt,imageurl):
+        self.prompt = '请你用一句话描述一下图片的内容。注意！不需要出现类似于“这是一幅...”的描述。'
+    
+    def askmodel(self,imageurl):
         messages = [
             {
                 "role": "user",
@@ -19,7 +20,7 @@ class VLmodel:
                         "type": "image",
                         "image": imageurl,
                     },
-                    {"type": "text", "text": prompt},
+                    {"type": "text", "text": self.prompt},
                 ],
             }
         ]
@@ -47,15 +48,13 @@ class VLmodel:
         )
         return output_text[0]
     
-QwenVL = VLmodel('/data/sdb2/lzy/LLM/Qwen2-VL-7B-Instruct')
-
-
 if __name__ == "__main__":
     """
     for test
     """
     import jieba
-    ans = QwenVL.askmodel("请你用一句话描述一下图片的内容。注意！不需要出现类似于“这是一幅...”的描述。","https://c-ssl.duitang.com/uploads/blog/202304/03/20230403101857_d328e.jpg")
+    vLmodel = VLmodel('/data/sdb2/lzy/LLM/Qwen2-VL-7B-Instruct')
+    ans = vLmodel.askmodel("请你用一句话描述一下图片的内容。注意！不需要出现类似于“这是一幅...”的描述。","https://c-ssl.duitang.com/uploads/blog/202304/03/20230403101857_d328e.jpg")
     from rouge_chinese import Rouge
     rouge = Rouge()
     print(ans)
