@@ -9,7 +9,10 @@ def zoom(x,min,max) -> float:
 
     return: 放缩后的值，0~1
     """
-    return x/(max-min)
+    max-=min
+    x-=min
+    min-=min
+    return x/max
 
 def shannon_entropy(probs:list) -> float:
     """

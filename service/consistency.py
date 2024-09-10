@@ -4,6 +4,7 @@ from rouge_chinese import Rouge
 from skimage.metrics import structural_similarity as ssim
 from sklearn.metrics.pairwise import cosine_similarity
 from ..tools.funcs import *
+from ..tools.askmodel import *
 from ..config.Data import Data
 import jieba
 rouge=Rouge()
@@ -16,7 +17,7 @@ def trig_class_consistency(data:Data) -> bool:
     :param Y_per_annotater: 每个样本每个标注员的标注结果
     :return: 是否触发，bool
     """
-    if len(data.Y_modal)==1 and data.Y_modal[0]=='类别':
+    if data.Y_modal==['类别']:
         if len(data.Y_per_annotater)!=0:
             # 要求每个样本的标注员数量一样
             annotater_count=len(data.Y_per_annotater[0])
@@ -59,7 +60,7 @@ def trig_docontent_consistency(data:Data) -> bool:
     :param Y_per_annotater: 每个样本每个标注员的标注结果
     :return: 是否触发，bool
     """
-    if len(data.Y_modal)==1 and data.Y_modal[0]=='文本':
+    if data.Y_modal==['文本']:
         if len(data.Y_per_annotater)!=0:
             # 要求每个样本每个标注员标注的都是字符串类型
             for sample in data.Y_per_annotater:
@@ -89,22 +90,28 @@ def docontent_consistency(data:Data):
         all_scores.append(score)
     return round(sum(all_scores)/len(all_scores),4)
 
-
+def trig_image_text_consistancy(data:Data):
+    '''
+    图文内容一致性的触发函数  --图像转文本模型，rougel相似度
+    :Y_pic_paths
+    :Y_modal
+    :return:bool
+    '''
+    if len(data.Y_modal)==2 and '文本' in data.Y_modal and '图像' in data.Y_modal:
+        return True
+    return False
 def image_text_consistancy(data:Data):
     '''
     图文内容一致性  --图像转文本模型，rougel相似度
-    :Y_paths
-    :Y
+    :Y_pic_paths
+    :Y['文本']
     :return:图文内容一致性得分，范围0～1
     '''
-    if len(data.X_) != len(data.Y): # 这个写到触发函数里
-        raise ValueError("两个列表的长度不相同")
-    
     all_scores=[]
-    for i,item in enumerate(X_images):
-        text = QwenVL.askmodel("请你用简短的语言描述一下图片的内容。",item)
+    for i,item in enumerate(data.Y_pic_paths):
+        text = ask_VLmodel("请你用简短的语言描述一下图片的内容。",[item])[0]
         textx = ' '.join(jieba.lcut(text))
-        texty = ' '.join(jieba.lcut(Y[i]))
+        texty = ' '.join(jieba.lcut(data.Y['文本'][i]))
         all_scores.append(rouge.get_scores(textx,texty)[0]['rouge-l']['f'])
     return round(sum(all_scores)/len(all_scores),4)
     
@@ -116,7 +123,7 @@ def trig_docfeature_consistency(data:Data) -> bool:
     :param Y_per_annotater: 每个样本每个标注员的标注结果
     :return: 是否触发，bool
     """
-    if len(data.Y_modal)==1 and data.Y_modal[0]=='文本':
+    if data.Y_modal==['文本']:
         if len(data.Y_per_annotater)!=0:
             # 要求每个样本每个标注员标注的都是字符串类型
             for sample in data.Y_per_annotater:
@@ -138,9 +145,9 @@ def docfeature_consistency(data:Data):
     """
     all_scores=[]
     for sample in data.Y_per_annotater:
-        encoded_sample=model.encode(sample)
+        encoded_sample=ask_DocEncoder(sample)
         cos_matric=cosine_similarity(encoded_sample)
-        score=np.sum(np.fill_diagonal(cos_matric,0))
+        score=np.sum(np.fill_diagonal(cos_matric,0)) / (len(sample)**2-len(sample))
         all_scores.append(score)
     final_score=round(sum(all_scores)/len(all_scores),4)
     return zoom(final_score,-1,1)
@@ -153,7 +160,7 @@ def trig_visual_consistency(data:Data) -> bool:
     :param Y_per_annotater: 每个样本每个标注员的标注结果
     :return: 是否触发，bool
     """
-    if len(data.Y_modal)==1 and data.Y_modal[0]=='图像':
+    if data.Y_modal==['图像']:
         if len(data.Y_per_annotater)!=0:
             # 要求每个样本每个标注员标注的都是numpy矩阵类型，并且尺寸相同
             shape=data.Y_per_annotater[0][0].shape
@@ -185,28 +192,9 @@ def visual_consistency(data:Data):
     return round(sum(all_scores)/len(all_scores),4)
 
 
-def image_text_consistancy(X_images = [], Y = []):
-    '''
-    图文内容一致性  --图像转文本模型，rougel相似度
-    :X_images: 图片url列表
-    :Y:图片描述
-    :return:图文内容一致性得分，范围0～1
-    '''
-    if len(X_images) != len(Y):
-        raise ValueError("两个列表的长度不相同")
-    
-    all_scores=[]
-    for i,item in enumerate(X_images):
-        text = QwenVL.askmodel("请你用简短的语言描述一下图片的内容。",item)
-        textx = ' '.join(jieba.lcut(text))
-        texty = ' '.join(jieba.lcut(Y[i]))
-        all_scores.append(rouge.get_scores(textx,texty)[0]['rouge-l']['f'])
-    return round(sum(all_scores)/len(all_scores),4)
-    
-
-
 # 函数列表，元素为[指标名，触发函数，计算函数]
 consistency_funclist=[["类别一致性",trig_class_consistency,class_consistency],
                     ["文本内容一致性",trig_docontent_consistency,docontent_consistency],
                     ["文本向量特征一致性",trig_docfeature_consistency,docfeature_consistency],
+                    ["图文内容一致性",trig_image_text_consistancy,image_text_consistancy],
                     ["视觉一致性",trig_visual_consistency,visual_consistency],]

@@ -9,9 +9,8 @@ class VLmodel:
         self.model = Qwen2VLForConditionalGeneration.from_pretrained(modelname, torch_dtype="auto", device_map="auto")
         self.processor = AutoProcessor.from_pretrained(modelname)
         self.device = "cuda"
-        self.prompt = '请你用一句话描述一下图片的内容。注意！不需要出现类似于“这是一幅...”的描述。'
     
-    def askmodel(self,imageurl):
+    def askmodel(self,prompt,imageurl):
         messages = [
             {
                 "role": "user",
@@ -20,7 +19,7 @@ class VLmodel:
                         "type": "image",
                         "image": imageurl,
                     },
-                    {"type": "text", "text": self.prompt},
+                    {"type": "text", "text": prompt},
                 ],
             }
         ]
