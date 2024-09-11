@@ -1,4 +1,4 @@
-from ..tools.readata import *
+from tools.readata import *
 
 
 modal2func={
@@ -18,7 +18,7 @@ class Data:
         # Y的模态：类别、文本、图像、音频、视频、语音
         self.Y_modal=data.get('Y_modal',[])
         # 每个样本的主题
-        self.X_topic=data.get('X_topic',[])
+        self.X_topic=self._get_X_topic(dataset_dir)
         # 每个样本每个标注员的标注结果
         self.Y_per_annotater=self._get_Y_per_annotater(dataset_dir)
         # X和Y内容
@@ -44,6 +44,11 @@ class Data:
     
     def _get_Y_per_annotater(self, dataset_dir):
         Yp_path=os.path.join(dataset_dir,'Y_per_annotater')
+        if not os.path.exists(Yp_path):
+            Y_per_annotater={}
+            for modal in self.Y_modal:
+                Y_per_annotater[modal]=[]
+            return Y_per_annotater
         Yp_dirs=[os.path.join(Yp_path,one) for one in os.listdir(Yp_path)]
         Y_per_annotater={}
         for modal in self.Y_modal:
@@ -58,3 +63,11 @@ class Data:
                 Y_per_modal=list(zip(*Y_per_modal)) # 样本数，标注员数
                 Y_per_annotater[modal+'地址']=Y_per_modal 
         return Y_per_annotater
+    
+    def _get_X_topic(self, dataset_dir):
+        X_topic_file=os.path.join(dataset_dir,'X_topic/topic.txt')
+        if not os.path.exists(X_topic_file):
+            return []
+        with open(X_topic_file,'r',encoding='utf-8') as f:
+            topics=[one.strip('\n') for one in f.readlines()]
+        return topics

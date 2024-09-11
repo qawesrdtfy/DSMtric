@@ -43,7 +43,7 @@ def spread_probs(labels:list) -> list:
         speads[label]=speads.get(label,0)+1
     for k,v in speads.items():
         speads[k]=v/length
-    return speads
+    return list(speads.values())
 
 def image_binary(matrix:np.ndarray) -> np.ndarray:
     """

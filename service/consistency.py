@@ -4,9 +4,9 @@ from rouge_chinese import Rouge
 from skimage.metrics import structural_similarity as ssim
 from sklearn.metrics import jaccard_score
 from sklearn.metrics.pairwise import cosine_similarity
-from ..tools.funcs import *
-from ..tools.askmodel import *
-from ..config.Data import Data
+from tools.funcs import *
+from tools.askmodel import *
+from config.Data import Data
 import jieba
 rouge=Rouge()
 

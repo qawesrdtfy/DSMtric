@@ -1,5 +1,5 @@
-from ..tools.funcs import *
-from ..config.Data import Data
+from tools.funcs import *
+from config.Data import Data
 
 def trig_class_diversity(data:Data) -> bool:
     """
