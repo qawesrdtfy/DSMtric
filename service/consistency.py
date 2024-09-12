@@ -115,7 +115,20 @@ def image_text_consistancy(data:Data):
         texty = ' '.join(jieba.lcut(data.Y['文本'][i]))
         all_scores.append(rouge.get_scores(textx,texty)[0]['rouge-l']['f'])
     return round(sum(all_scores)/len(all_scores),4)
-    
+def image_text_vec_consistancy(data:Data):
+    '''
+    图文向量特征一致性  --CLIP
+    :Y_pic_paths
+    :Y['文本']
+    :return:图文内容一致性得分，范围0～1
+    '''
+    all_scores = []
+    for i,item in enumerate(data.Y_pic_paths):
+        sim = ask_CLIPmodel(item,data.Y['文本'][i])
+        all_scores.append(sim)
+    return round(sum(all_scores)/len(all_scores),4)
+        
+
 
 def trig_docfeature_consistency(data:Data) -> bool:
     """

@@ -7,6 +7,7 @@ from model.models import *
 docEncoder = DocEncoder('/data/sdb2/wyh/models/bert-base-chinese','cuda',128)
 vLmodel = VLmodel('/data/sdb2/lzy/LLM/Qwen2-VL-7B-Instruct')
 picEncoder = PicEncoder('/data/sdb2/wyh/models/vit-base-patch16-224','cuda')
+CLIPmode = Clip_Sim()
 # 后端服务启动
 app = Flask(__name__)
 
@@ -43,6 +44,18 @@ def pic_encode():
         pic_encoded = picEncoder.encode(pic_paths)
         formResult = {"resultinfo":pic_encoded}
         print('Normal Reponse:',"图片编码接口调用成功")
+        return jsonify(formResult)
+    return 'connection ok!'
+
+@app.route("/CLIPmodel",methods=['post','get'])
+def CLIPmodel():
+    if request.method == "POST":
+        data = json.loads(request.get_data(as_text=True))
+        pic_paths = data['pic_paths']
+        text = data['text']
+        sim = [Clip_Sim.calculate_similarity(item,text[i]) for i,item in enumerate(pic_paths)]
+        formResult = {"resultinfo":sim}
+        print('Normal Reponse:',"图文向量相似度接口调用成功")
         return jsonify(formResult)
     return 'connection ok!'
 
