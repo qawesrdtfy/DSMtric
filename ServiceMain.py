@@ -15,9 +15,9 @@ def trig(data):
     cons_trigged=[tfunc(data) for name,tfunc,_ in consistency_funclist]
     print('一致性指标可用性',cons_trigged)
     divers_trigged=[tfunc(data) for name,tfunc,_ in diversity_funclist]
-    print('多样性指标可用性',cons_trigged)
+    print('多样性指标可用性',divers_trigged)
     norma_trigged=[tfunc(data) for name,tfunc,_ in normative_funclist]
-    print('多样性指标可用性',cons_trigged)
+    print('规范性指标可用性',norma_trigged)
     return cons_trigged,divers_trigged,norma_trigged
 
 def compute(data,cons_trigged,divers_trigged,norma_trigged):
@@ -47,10 +47,11 @@ def main(args):
     pure_cons_scores=[one for one in cons_scores if one!=-1]
     pure_divers_scores=[one for one in divers_scores if one!=-1]
     pure_norma_scores=[one for one in norma_scores if one!=-1]
-    cons_score=round(sum(pure_cons_scores)/len(pure_cons_scores),4)
-    divers_score=round(sum(pure_divers_scores)/len(pure_divers_scores),4)
-    norma_score=round(sum(pure_norma_scores)/len(pure_norma_scores),4)
-    final_score=round((cons_score+divers_score+norma_score)/3,4)
+    cons_score=round(sum(pure_cons_scores)/len(pure_cons_scores),4) if len(pure_cons_scores)!=0 else -1
+    divers_score=round(sum(pure_divers_scores)/len(pure_divers_scores),4) if len(pure_divers_scores)!=0 else -1
+    norma_score=round(sum(pure_norma_scores)/len(pure_norma_scores),4) if len(pure_norma_scores)!=0 else -1
+    three_scores=[one for one in [cons_score,divers_score,norma_score] if one!=-1]
+    final_score=round(sum(three_scores)/len(three_scores),4) if len(three_scores)!=0 else -1
     # 保存结果和完成标识
     result={
         "总分":final_score,

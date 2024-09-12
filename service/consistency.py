@@ -4,9 +4,9 @@ from rouge_chinese import Rouge
 from skimage.metrics import structural_similarity as ssim
 from sklearn.metrics import jaccard_score
 from sklearn.metrics.pairwise import cosine_similarity
-from ..tools.funcs import *
-from ..tools.askmodel import *
-from ..config.Data import Data
+from tools.funcs import *
+from tools.askmodel import *
+from config.Data import Data
 import jieba
 rouge=Rouge()
 
@@ -19,10 +19,10 @@ def trig_class_consistency(data:Data) -> bool:
     :return: 是否触发，bool
     """
     if data.Y_modal==['类别']:
-        if len(data.Y_per_annotater)!=0:
+        if len(data.Y_per_annotater['类别'])!=0:
             # 要求每个样本的标注员数量一样
-            annotater_count=len(data.Y_per_annotater[0])
-            for sample in data.Y_per_annotater:
+            annotater_count=len(data.Y_per_annotater['类别'][0])
+            for sample in data.Y_per_annotater['类别']:
                 if annotater_count!=len(sample):
                     break
             else:
@@ -36,13 +36,13 @@ def class_consistency(data:Data):
     """
     class_list=[]
     # 统计都有哪些类
-    for sample in data.Y_per_annotater:
+    for sample in data.Y_per_annotater['类别']:
         for annotated in sample:
             if annotated not in class_list:
                 class_list.append(annotated)
     # 统计每个样本每个类的支持人数
     class_statistic=[]
-    for sample in data.Y_per_annotater:
+    for sample in data.Y_per_annotater['类别']:
         line=[0 for _ in class_list]
         for annotated in sample:
             line[class_list.index(annotated)]+=1
@@ -62,9 +62,9 @@ def trig_docontent_consistency(data:Data) -> bool:
     :return: 是否触发，bool
     """
     if data.Y_modal==['文本']:
-        if len(data.Y_per_annotater)!=0:
+        if len(data.Y_per_annotater['文本'])!=0:
             # 要求每个样本每个标注员标注的都是字符串类型
-            for sample in data.Y_per_annotater:
+            for sample in data.Y_per_annotater['文本']:
                 for per_annotate in sample:
                     if not isinstance(per_annotate,str):
                         break
@@ -81,7 +81,7 @@ def docontent_consistency(data:Data):
     :return: 内容一致性得分，范围0～1
     """
     all_scores=[]
-    for sample in data.Y_per_annotater:
+    for sample in data.Y_per_annotater['文本']:
         scores=[]
         sample_splited=[' '.join(jieba.lcut(item)) for item in sample]
         for i in range(len(sample_splited)):
@@ -109,7 +109,7 @@ def image_text_consistancy(data:Data):
     :return:图文内容一致性得分，范围0～1
     '''
     all_scores=[]
-    for i,item in enumerate(data.Y_pic_paths):
+    for i,item in enumerate(data.Y['图像地址']):
         text = ask_VLmodel("请你用简短的语言描述一下图片的内容。",[item])[0]
         textx = ' '.join(jieba.lcut(text))
         texty = ' '.join(jieba.lcut(data.Y['文本'][i]))
@@ -138,9 +138,9 @@ def trig_docfeature_consistency(data:Data) -> bool:
     :return: 是否触发，bool
     """
     if data.Y_modal==['文本']:
-        if len(data.Y_per_annotater)!=0:
+        if len(data.Y_per_annotater['文本'])!=0:
             # 要求每个样本每个标注员标注的都是字符串类型
-            for sample in data.Y_per_annotater:
+            for sample in data.Y_per_annotater['文本']:
                 for per_annotate in sample:
                     if not isinstance(per_annotate,str):
                         break
@@ -158,8 +158,34 @@ def docfeature_consistency(data:Data):
     :return: 内容一致性得分，范围0～1
     """
     all_scores=[]
-    for sample in data.Y_per_annotater:
+    for sample in data.Y_per_annotater['文本']:
         encoded_sample=ask_DocEncoder(sample)
+        cos_matric=cosine_similarity(encoded_sample)
+        score=np.sum(np.fill_diagonal(cos_matric,0)) / (len(sample)**2-len(sample))
+        all_scores.append(score)
+    final_score=round(sum(all_scores)/len(all_scores),4)
+    return zoom(final_score,-1,1)
+
+
+def trig_picfeature_consistency(data:Data) -> bool:
+    """
+    图像向量特征一致性的触发函数
+    :param Y_modal: Y的模态
+    :param Y_per_annotater: 每个样本每个标注员的标注结果
+    :return: 是否触发，bool
+    """
+    if data.Y_modal==['图像']:
+        return True
+    return False
+def picfeature_consistency(data:Data):
+    """
+    图像向量特征一致性
+    :param Y_per_annotater: 每个样本每个标注员的标注结果
+    :return: 内容一致性得分，范围0～1
+    """
+    all_scores=[]
+    for sample in data.Y_per_annotater['图像地址']:
+        encoded_sample=ask_PicEncoder(sample)
         cos_matric=cosine_similarity(encoded_sample)
         score=np.sum(np.fill_diagonal(cos_matric,0)) / (len(sample)**2-len(sample))
         all_scores.append(score)
@@ -175,10 +201,10 @@ def trig_visual_consistency(data:Data) -> bool:
     :return: 是否触发，bool
     """
     if data.Y_modal==['图像']:
-        if len(data.Y_per_annotater)!=0:
+        if len(data.Y_per_annotater['图像'])!=0:
             # 要求每个样本每个标注员标注的都是numpy矩阵类型，并且尺寸相同
-            shape=data.Y_per_annotater[0][0].shape
-            for sample in data.Y_per_annotater:
+            shape=data.Y_per_annotater['图像'][0][0].shape
+            for sample in data.Y_per_annotater['图像']:
                 for per_annotate in sample:
                     if not isinstance(per_annotate,np.ndarray) or per_annotate.shape!=shape:
                         break
@@ -196,7 +222,7 @@ def visual_consistency(data:Data):
     :return: 内容一致性得分，范围0～1
     """
     all_scores=[]
-    for sample in data.Y_per_annotater:
+    for sample in data.Y_per_annotater['图像']:
         scores=[]
         for i in range(len(sample)):
             for j in range(i+1,len(sample)):
@@ -214,10 +240,10 @@ def trig_goals_consistency(data:Data) -> bool:
     :return: 是否触发，bool
     """
     if data.Y_modal==['图像']:
-        if len(data.Y_per_annotater)!=0:
+        if len(data.Y_per_annotater['图像'])!=0:
             # 要求每个样本每个标注员标注的都是numpy矩阵类型，并且尺寸相同
-            shape=data.Y_per_annotater[0][0].shape
-            for sample in data.Y_per_annotater:
+            shape=data.Y_per_annotater['图像'][0][0].shape
+            for sample in data.Y_per_annotater['图像']:
                 for per_annotate in sample:
                     if not isinstance(per_annotate,np.ndarray) or per_annotate.shape!=shape:
                         break
@@ -236,7 +262,7 @@ def goals_consistency(data:Data):
     """
     all_scores = []
     # 计算jaccard index需要先将每个标注员标注的numpy矩阵转换为二值矩阵(只有元素0和1)
-    for sample in data.Y_per_annotater:
+    for sample in data.Y_per_annotater['图像']:
         scores = []
         for i in range(len(sample)):
             for j in range(i+1,len(sample)):
@@ -250,6 +276,7 @@ def goals_consistency(data:Data):
 consistency_funclist=[["类别一致性",trig_class_consistency,class_consistency],
                     ["文本内容一致性",trig_docontent_consistency,docontent_consistency],
                     ["文本向量特征一致性",trig_docfeature_consistency,docfeature_consistency],
+                    ["图像向量特征一致性",trig_picfeature_consistency,picfeature_consistency],
                     ["图文内容一致性",trig_image_text_consistancy,image_text_consistancy],
                     ["视觉一致性",trig_visual_consistency,visual_consistency],
                     ["目标一致性",trig_goals_consistency,goals_consistency]]

@@ -3,6 +3,7 @@ import subprocess
 from flask import Flask,request,jsonify
 import json
 import shutil
+import traceback
 
 # 后端服务启动
 app = Flask(__name__)
@@ -37,6 +38,7 @@ def metric():
         except Exception as e:
             formResult = {"resultinfo":f'{username}的“{datasetname}”数据集评测启动失败，参数解析失败！{e}'}
             print('Abnormal Reponse:',formResult)
+            traceback.print_exc()
             return jsonify(formResult)
         # 构建专属空间
         try:
@@ -44,6 +46,7 @@ def metric():
         except Exception as e:
             formResult = {"resultinfo":f'{username}的“{datasetname}”数据集评测启动失败，存储空间构建失败！{e}'}
             print('Abnormal Reponse:',formResult)
+            traceback.print_exc()
             return jsonify(formResult)
         # 存储并解压数据集
         try:
@@ -51,13 +54,15 @@ def metric():
             # 要求解压后产生文件夹X和Y，X和Y内是模态为名的文件夹
             with open(f'{dataset_dir}/data.tar.gz', 'wb') as file:
                 file.writelines(dataset.readlines())
-            command = ["tar", "-xzvf", f'{dataset_dir}/data.tar.gz']
-            process = subprocess.Popen(command, stdout=file, stderr=file, cwd='.')
+            command = ["tar", "-xvf", f'data.tar.gz']
+            process = subprocess.Popen(command, cwd=dataset_dir)
+            # process = subprocess.Popen(command, stdout=file, stderr=file, cwd='.')
             process.wait()
         except Exception as e:
             deal_dir(username,datasetname,mode=1)
             formResult = {"resultinfo":f'{username}的“{datasetname}”数据集评测启动失败，数据集读取或存储失败！{e}'}
             print('Abnormal Reponse:',formResult)
+            traceback.print_exc()
             return jsonify(formResult)
         # 启动评测
         try:
@@ -72,6 +77,7 @@ def metric():
             deal_dir(username,datasetname,mode=1)
             formResult = {"resultinfo":f'{username}的“{datasetname}”数据集评测启动失败，评测程序启动失败！{e}'}
             print('Abnormal Reponse:',formResult)
+            traceback.print_exc()
             return jsonify(formResult)
 
         formResult = {"resultinfo":f'{username}的“{datasetname}”数据集评测开始！'}

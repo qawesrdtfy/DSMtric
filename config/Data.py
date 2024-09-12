@@ -1,4 +1,4 @@
-from ..tools.readata import *
+from tools.readata import *
 
 
 modal2func={
@@ -17,12 +17,10 @@ class Data:
         self.X_modal=data.get('X_modal',[])
         # Y的模态：类别、文本、图像、音频、视频、语音
         self.Y_modal=data.get('Y_modal',[])
-        # 每个样本每个标注员的标注结果
-        self.Y_per_annotater=data.get('Y_per_annotater',[])
         # 每个样本的主题
-        self.X_topic=data.get('X_topic',[])
-        # 如果Y模态含有图像，则有此属性：每个图像的路径
-        self.Y_pic_paths=self._get_Y_pic_paths(dataset_dir)
+        self.X_topic=self._get_X_topic(dataset_dir)
+        # 每个样本每个标注员的标注结果
+        self.Y_per_annotater=self._get_Y_per_annotater(dataset_dir)
         # X和Y内容
         self.X,self.Y=self._read_XY(dataset_dir)
     
@@ -31,15 +29,45 @@ class Data:
         X={}
         for modal in self.X_modal:
             X[modal]=modal2func[modal](os.path.join(X_path,modal))
+        for modal in ['图像']:
+            if modal in self.X_modal:
+                X[modal+'地址']=[os.path.join(X_path,modal,one) for one in os.listdir(os.path.join(X_path,modal))]
 
         Y_path=os.path.join(dataset_dir,'Y')
         Y={}
         for modal in self.Y_modal:
             Y[modal]=modal2func[modal](os.path.join(Y_path,modal))
+        for modal in ['图像']:
+            if modal in self.Y_modal:
+                Y[modal+'地址']=[os.path.join(Y_path,modal,one) for one in os.listdir(os.path.join(Y_path,modal))]
         return X,Y
     
-    def _get_Y_pic_paths(self, dataset_dir):
-        if '图像' not in self.Y_modal:
+    def _get_Y_per_annotater(self, dataset_dir):
+        Yp_path=os.path.join(dataset_dir,'Y_per_annotater')
+        if not os.path.exists(Yp_path):
+            Y_per_annotater={}
+            for modal in self.Y_modal:
+                Y_per_annotater[modal]=[]
+            return Y_per_annotater
+        Yp_dirs=[os.path.join(Yp_path,one) for one in os.listdir(Yp_path)]
+        Y_per_annotater={}
+        for modal in self.Y_modal:
+            Y_per_modal=[modal2func[modal](os.path.join(Yp_dir,modal)) 
+                             for Yp_dir in Yp_dirs] # 标注员数，样本数
+            Y_per_modal=list(zip(*Y_per_modal)) # 样本数，标注员数
+            Y_per_annotater[modal]=Y_per_modal 
+        for modal in ['图像']:
+            if modal in self.Y_modal:
+                Y_per_modal=[[os.path.join(Yp_dir,modal,file) for file in os.listdir(os.path.join(Yp_dir,modal))] 
+                             for Yp_dir in Yp_dirs] # 标注员数，样本数
+                Y_per_modal=list(zip(*Y_per_modal)) # 样本数，标注员数
+                Y_per_annotater[modal+'地址']=Y_per_modal 
+        return Y_per_annotater
+    
+    def _get_X_topic(self, dataset_dir):
+        X_topic_file=os.path.join(dataset_dir,'X_topic/topic.txt')
+        if not os.path.exists(X_topic_file):
             return []
-        Y_pic_dir=os.path.join(dataset_dir,'Y','图像')
-        return [os.path.join(Y_pic_dir,one) for one in os.listdir(Y_pic_dir)]
+        with open(X_topic_file,'r',encoding='utf-8') as f:
+            topics=[one.strip('\n') for one in f.readlines()]
+        return topics
