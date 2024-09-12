@@ -11,6 +11,7 @@ from tools.funcs import *
 from tools.askmodel import *
 from config.Data import Data
 import jieba
+from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 rouge=Rouge()
 
 
@@ -405,6 +406,37 @@ def spearman_consistency(data:Data):
     spearmanr,_ = spearmanr(X_cosmatrix,Y_cosmatrix)
     return zoom(abs(spearmanr),-1,1)
 
+def trig_audio_text_consistancy(data:Data):
+    '''
+    图文内容一致性的触发函数  --图像转文本模型，rougel相似度
+    :X_modal
+    :Y_modal
+    :return:bool
+    '''
+    if data.Y_modal==['音频'] and data.X_modal==['文本'] or \
+     data.X_modal==['音频'] and data.Y_modal==['文本']:
+        return True
+    return False
+def ASR_consistancy(data:Data):
+    """
+    ASR一致性  -- Whisper
+    :return : BLEU分数范围0～1
+    """
+    all_scores=[]
+    if data.Y_modal==['文本'] and data.X_modal==['音频']:
+        audios = data.X['音频地址']
+        docs = data.Y['文本']
+    else:
+        audios = data.Y['音频地址']
+        docs = data.X['文本']
+    for i,item in enumerate(audios):
+        text = ask_WhisperModel(item)
+        textx = ' '.join(jieba.lcut(text))
+        texty = ' '.join(jieba.lcut(docs[i]))
+        score = sentence_bleu(textx, texty,smoothing_function=SmoothingFunction().method1)
+        all_scores.append(score)
+    return round(sum(all_scores)/len(all_scores),4)
+
 # 函数列表，元素为[指标名，触发函数，计算函数]
 consistency_funclist=[["类别一致性",trig_class_consistency,class_consistency],
                     ["文本内容一致性",trig_docontent_consistency,docontent_consistency],
@@ -416,4 +448,5 @@ consistency_funclist=[["类别一致性",trig_class_consistency,class_consistenc
                     ["视觉一致性",trig_visual_consistency,visual_consistency],
                     ["线性相关一致性",trig_person_consistency,person_consistency],
                     ["非线性相关一致性",trig_spearman_consistency,spearman_consistency],
-                    ["目标一致性",trig_goals_consistency,goals_consistency]]
+                    ["目标一致性",trig_goals_consistency,goals_consistency],
+                    ["ASR一致性",trig_audio_text_consistancy,ASR_consistancy]]

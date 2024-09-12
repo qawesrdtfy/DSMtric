@@ -24,3 +24,8 @@ def ask_AudioEncoder(audios:list):
     r=requests.post('0.0.0.0:48812/audio_encode',json={"audios":audios})
     r=r.json()['resultinfo']
     return r
+
+def ask_WhisperModel(audios:list):
+    r=requests.post('0.0.0.0:48812/audio2text',json={"audios":audios})
+    r=r.json()['resultinfo']
+    return r
