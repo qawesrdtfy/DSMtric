@@ -4,6 +4,9 @@ from rouge_chinese import Rouge
 from skimage.metrics import structural_similarity as ssim
 from sklearn.metrics import jaccard_score
 from sklearn.metrics.pairwise import cosine_similarity
+from scipy.stats import pearsonr,spearmanr
+from librosa.feature import mfcc
+from dtaidistance import dtw
 from tools.funcs import *
 from tools.askmodel import *
 from config.Data import Data
@@ -91,6 +94,40 @@ def docontent_consistency(data:Data):
         all_scores.append(score)
     return round(sum(all_scores)/len(all_scores),4)
 
+
+
+def trig_audiocontent_consistency(data:Data) -> bool:
+    """
+    音频内容一致性的触发函数
+    :param Y_modal: Y的模态
+    :param Y_per_annotater: 每个样本每个标注员的标注结果
+    :return: 是否触发，bool
+    """
+    if data.Y_modal==['音频'] and len(data.Y_per_annotater['音频'])!=0:
+        return True
+    return False
+def audiocontent_consistency(data:Data):
+    """
+    音频内容一致性
+    :param Y_per_annotater: 每个样本每个标注员的标注结果
+    :return: 内容一致性得分，范围0～1
+    """
+    all_scores=[]
+    maxone=0
+    for sample in data.Y_per_annotater['音频']:
+        scores=[]
+        mfcc_sample = [mfcc(one) for one in sample]
+        for i in range(len(mfcc_sample)):
+            for j in range(i+1,len(mfcc_sample)):
+                d=dtw(mfcc_sample[i],mfcc_sample[j])
+                maxone=d if d>maxone else maxone
+                scores.append(d)
+        score=sum(scores)/len(scores)
+        all_scores.append(score)
+    final_score=round(sum(all_scores)/len(all_scores),4)
+    return 1-zoom(final_score,0,maxone)
+
+
 def trig_image_text_consistancy(data:Data):
     '''
     图文内容一致性的触发函数  --图像转文本模型，rougel相似度
@@ -129,7 +166,6 @@ def image_text_vec_consistancy(data:Data):
     return round(sum(all_scores)/len(all_scores),4)
         
 
-
 def trig_docfeature_consistency(data:Data) -> bool:
     """
     文本向量特征一致性的触发函数
@@ -154,12 +190,36 @@ def docfeature_consistency(data:Data):
     """
     文本向量特征一致性
     :param Y_per_annotater: 每个样本每个标注员的标注结果
-    :param model: 文本编码模型
     :return: 内容一致性得分，范围0～1
     """
     all_scores=[]
     for sample in data.Y_per_annotater['文本']:
         encoded_sample=ask_DocEncoder(sample)
+        cos_matric=cosine_similarity(encoded_sample)
+        score=np.sum(np.fill_diagonal(cos_matric,0)) / (len(sample)**2-len(sample))
+        all_scores.append(score)
+    final_score=round(sum(all_scores)/len(all_scores),4)
+    return zoom(final_score,-1,1)
+
+
+def trig_audiofeature_consistency(data:Data) -> bool:
+    """
+    音频向量特征一致性的触发函数
+    :param Y_modal: Y的模态
+    :return: 是否触发，bool
+    """
+    if data.Y_modal==['音频'] and len(data.Y_per_annotater['音频'])!=0:
+        return True
+    return False
+def audiofeature_consistency(data:Data):
+    """
+    音频向量特征一致性
+    :param Y_per_annotater: 每个样本每个标注员的标注结果
+    :return: 内容一致性得分，范围0～1
+    """
+    all_scores=[]
+    for sample in data.Y_per_annotater['音频']:
+        encoded_sample=ask_AudioEncoder(sample)
         cos_matric=cosine_similarity(encoded_sample)
         score=np.sum(np.fill_diagonal(cos_matric,0)) / (len(sample)**2-len(sample))
         all_scores.append(score)
@@ -272,11 +332,76 @@ def goals_consistency(data:Data):
     return round(sum(all_scores)/len(all_scores),4)
 
 
+def trig_person_consistency(data:Data) -> bool:
+    """
+    线性相关一致性的触发函数
+    :param Y_modal: Y的模态
+    :return: 是否触发，bool
+    """
+    modals=['文本','音频','图像'] # TODO 后期还会有语音、视频，当然需要对应修改下面的计算函数
+    if len(data.Y_modal)==1 and data.Y_modal[0] in modals and \
+    len(data.X_modal)==1 and data.X_modal[0] in modals:
+        return True
+    return False
+def person_consistency(data:Data):
+    """
+    线性相关一致性
+    :param X: 
+    :param Y: 
+    :return: 线性相关一致性得分，范围0～1
+    """
+    modal2func={
+        "文本":ask_DocEncoder,
+        "音频":ask_AudioEncoder,
+        "图像":ask_PicEncoder
+    }
+    X_embeded = modal2func[data.X_modal[0]](data.X[data.X_modal[0]])
+    Y_embeded = modal2func[data.Y_modal[0]](data.Y[data.Y_modal[0]])
+    X_cosmatrix = cosine_similarity(X_embeded).flatten().tolist()
+    Y_cosmatrix = cosine_similarity(Y_embeded).flatten().tolist()
+    person,_ = pearsonr(X_cosmatrix,Y_cosmatrix)
+    return zoom(abs(person),-1,1)
+
+
+def trig_spearman_consistency(data:Data) -> bool:
+    """
+    非线性相关一致性的触发函数
+    :param Y_modal: Y的模态
+    :return: 是否触发，bool
+    """
+    modals=['文本','音频','图像'] # TODO 后期还会有语音、视频，当然需要对应修改下面的计算函数
+    if len(data.Y_modal)==1 and data.Y_modal[0] in modals and \
+    len(data.X_modal)==1 and data.X_modal[0] in modals:
+        return True
+    return False
+def spearman_consistency(data:Data):
+    """
+    非线性相关一致性
+    :param X: 
+    :param Y: 
+    :return: 线性相关一致性得分，范围0～1
+    """
+    modal2func={
+        "文本":ask_DocEncoder,
+        "音频":ask_AudioEncoder,
+        "图像":ask_PicEncoder
+    }
+    X_embeded = modal2func[data.X_modal[0]](data.X[data.X_modal[0]])
+    Y_embeded = modal2func[data.Y_modal[0]](data.Y[data.Y_modal[0]])
+    X_cosmatrix = cosine_similarity(X_embeded).flatten().tolist()
+    Y_cosmatrix = cosine_similarity(Y_embeded).flatten().tolist()
+    spearmanr,_ = spearmanr(X_cosmatrix,Y_cosmatrix)
+    return zoom(abs(spearmanr),-1,1)
+
 # 函数列表，元素为[指标名，触发函数，计算函数]
 consistency_funclist=[["类别一致性",trig_class_consistency,class_consistency],
                     ["文本内容一致性",trig_docontent_consistency,docontent_consistency],
+                    ["音频内容一致性",trig_audiocontent_consistency,audiocontent_consistency],
                     ["文本向量特征一致性",trig_docfeature_consistency,docfeature_consistency],
                     ["图像向量特征一致性",trig_picfeature_consistency,picfeature_consistency],
+                    ["音频向量特征一致性",trig_audiofeature_consistency,audiofeature_consistency],
                     ["图文内容一致性",trig_image_text_consistancy,image_text_consistancy],
                     ["视觉一致性",trig_visual_consistency,visual_consistency],
+                    ["线性相关一致性",trig_person_consistency,person_consistency],
+                    ["非线性相关一致性",trig_spearman_consistency,spearman_consistency],
                     ["目标一致性",trig_goals_consistency,goals_consistency]]

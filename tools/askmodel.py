@@ -19,3 +19,8 @@ def ask_CLIPmodel(pic_paths:list,text:list):
     r=requests.post('0.0.0.0:48812/CLIPmodel',json={"pic_paths":pic_paths,"text":text})
     r=r.json()['resultinfo']
     return r
+
+def ask_AudioEncoder(audios:list):
+    r=requests.post('0.0.0.0:48812/audio_encode',json={"audios":audios})
+    r=r.json()['resultinfo']
+    return r

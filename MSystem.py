@@ -8,6 +8,7 @@ docEncoder = DocEncoder('/data/sdb2/wyh/models/bert-base-chinese','cuda',128)
 vLmodel = VLmodel('/data/sdb2/lzy/LLM/Qwen2-VL-7B-Instruct')
 picEncoder = PicEncoder('/data/sdb2/wyh/models/vit-base-patch16-224','cuda')
 CLIPmode = Clip_Sim()
+audioEncoder = AudioEncoder(('/data/sdb2/wyh/models/clap-htsat-unfused','cuda'))
 # 后端服务启动
 app = Flask(__name__)
 
@@ -56,6 +57,17 @@ def CLIPmodel():
         sim = [Clip_Sim.calculate_similarity(item,text[i]) for i,item in enumerate(pic_paths)]
         formResult = {"resultinfo":sim}
         print('Normal Reponse:',"图文向量相似度接口调用成功")
+        return jsonify(formResult)
+    return 'connection ok!'
+
+@app.route("/audio_encode",methods=['post','get'])
+def audio_encode():
+    if request.method == "POST":
+        data = json.loads(request.get_data(as_text=True))
+        audios = data['audios']
+        audio_encoded = audioEncoder.encode(audios)
+        formResult = {"resultinfo":audio_encoded}
+        print('Normal Reponse:',"音频编码接口调用成功")
         return jsonify(formResult)
     return 'connection ok!'
 

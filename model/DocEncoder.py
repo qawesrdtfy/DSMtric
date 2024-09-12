@@ -15,7 +15,7 @@ class DocEncoder:
 
 
 if __name__=='__main__':
-    c=DocEncoder('/data/sdb2/wyh/models/bert-base-chinese',32)
+    c=DocEncoder('/data/sdb2/wyh/models/bert-base-chinese','cuda',32)
     r=c.encode(['我吃了个包子','你今晚吃的什么'])
     print(len(r))
     print(r[0].shape)
