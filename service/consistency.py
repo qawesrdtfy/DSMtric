@@ -131,25 +131,31 @@ def audiocontent_consistency(data:Data):
 def trig_image_text_consistancy(data:Data):
     '''
     图文内容一致性的触发函数  --图像转文本模型，rougel相似度
-    :Y_pic_paths
+    :X_modal
     :Y_modal
     :return:bool
     '''
-    if len(data.Y_modal)==2 and '文本' in data.Y_modal and '图像' in data.Y_modal:
+    if data.Y_modal==['文本'] and data.X_modal==['图像'] or \
+     data.X_modal==['文本'] and data.Y_modal==['图像']:
         return True
     return False
 def image_text_consistancy(data:Data):
     '''
     图文内容一致性  --图像转文本模型，rougel相似度
-    :Y_pic_paths
-    :Y['文本']
+
     :return:图文内容一致性得分，范围0～1
     '''
     all_scores=[]
-    for i,item in enumerate(data.Y['图像地址']):
+    if data.Y_modal==['文本'] and data.X_modal==['图像']:
+        pictures = data.X['图像地址']
+        docs = data.Y['文本']
+    else:
+        pictures = data.Y['图像地址']
+        docs = data.X['文本']   
+    for i,item in enumerate(pictures):
         text = ask_VLmodel("请你用简短的语言描述一下图片的内容。",[item])[0]
         textx = ' '.join(jieba.lcut(text))
-        texty = ' '.join(jieba.lcut(data.Y['文本'][i]))
+        texty = ' '.join(jieba.lcut(docs[i]))
         all_scores.append(rouge.get_scores(textx,texty)[0]['rouge-l']['f'])
     return round(sum(all_scores)/len(all_scores),4)
 def image_text_vec_consistancy(data:Data):
@@ -159,9 +165,15 @@ def image_text_vec_consistancy(data:Data):
     :Y['文本']
     :return:图文内容一致性得分，范围0～1
     '''
+    if data.Y_modal==['文本'] and data.X_modal==['图像']:
+        pictures = data.X['图像地址']
+        docs = data.Y['文本']
+    else:
+        pictures = data.Y['图像地址']
+        docs = data.X['文本']   
     all_scores = []
-    for i,item in enumerate(data.Y_pic_paths):
-        sim = ask_CLIPmodel(item,data.Y['文本'][i])
+    for i,item in enumerate(pictures):
+        sim = ask_CLIPmodel(item,docs[i])
         all_scores.append(sim)
     return round(sum(all_scores)/len(all_scores),4)
         
