@@ -4,7 +4,7 @@ from rouge_chinese import Rouge
 from skimage.metrics import structural_similarity as ssim
 from sklearn.metrics import jaccard_score
 from sklearn.metrics.pairwise import cosine_similarity
-from scipy.stats import pearsonr,spearmanr
+import scipy.stats
 from librosa.feature import mfcc
 from dtaidistance import dtw
 from tools.funcs import *
@@ -64,18 +64,8 @@ def trig_docontent_consistency(data:Data) -> bool:
     :param Y_per_annotater: 每个样本每个标注员的标注结果
     :return: 是否触发，bool
     """
-    if data.Y_modal==['文本']:
-        if len(data.Y_per_annotater['文本'])!=0:
-            # 要求每个样本每个标注员标注的都是字符串类型
-            for sample in data.Y_per_annotater['文本']:
-                for per_annotate in sample:
-                    if not isinstance(per_annotate,str):
-                        break
-                else:
-                    continue
-                break
-            else:
-                return True
+    if data.Y_modal==['文本'] and len(data.Y_per_annotater['文本'])!=0:
+        return True
     return False
 def docontent_consistency(data:Data):
     """
@@ -90,8 +80,8 @@ def docontent_consistency(data:Data):
         for i in range(len(sample_splited)):
             for j in range(i+1,len(sample_splited)):
                 scores.append(rouge.get_scores(sample_splited[i],sample_splited[j])[0]['rouge-l']['f'])
-        score=sum(scores)/len(scores)
-        all_scores.append(score)
+        if len(scores)!=0:
+            all_scores.append(sum(scores)/len(scores))
     return round(sum(all_scores)/len(all_scores),4)
 
 
@@ -207,8 +197,9 @@ def docfeature_consistency(data:Data):
     all_scores=[]
     for sample in data.Y_per_annotater['文本']:
         encoded_sample=ask_DocEncoder(sample)
-        cos_matric=cosine_similarity(encoded_sample)
-        score=np.sum(np.fill_diagonal(cos_matric,0)) / (len(sample)**2-len(sample))
+        cos_matrix=cosine_similarity(encoded_sample)
+        np.fill_diagonal(cos_matrix,0)
+        score=np.sum(cos_matrix) / (len(sample)**2-len(sample))
         all_scores.append(score)
     final_score=round(sum(all_scores)/len(all_scores),4)
     return zoom(final_score,-1,1)
@@ -232,8 +223,9 @@ def audiofeature_consistency(data:Data):
     all_scores=[]
     for sample in data.Y_per_annotater['音频']:
         encoded_sample=ask_AudioEncoder(sample)
-        cos_matric=cosine_similarity(encoded_sample)
-        score=np.sum(np.fill_diagonal(cos_matric,0)) / (len(sample)**2-len(sample))
+        cos_matrix=cosine_similarity(encoded_sample)
+        np.fill_diagonal(cos_matrix,0)
+        score=np.sum(cos_matrix) / (len(sample)**2-len(sample))
         all_scores.append(score)
     final_score=round(sum(all_scores)/len(all_scores),4)
     return zoom(final_score,-1,1)
@@ -258,8 +250,9 @@ def picfeature_consistency(data:Data):
     all_scores=[]
     for sample in data.Y_per_annotater['图像地址']:
         encoded_sample=ask_PicEncoder(sample)
-        cos_matric=cosine_similarity(encoded_sample)
-        score=np.sum(np.fill_diagonal(cos_matric,0)) / (len(sample)**2-len(sample))
+        cos_matrix=cosine_similarity(encoded_sample)
+        np.fill_diagonal(cos_matrix,0)
+        score=np.sum(cos_matrix) / (len(sample)**2-len(sample))
         all_scores.append(score)
     final_score=round(sum(all_scores)/len(all_scores),4)
     return zoom(final_score,-1,1)
@@ -371,7 +364,7 @@ def person_consistency(data:Data):
     Y_embeded = modal2func[data.Y_modal[0]](data.Y[data.Y_modal[0]])
     X_cosmatrix = cosine_similarity(X_embeded).flatten().tolist()
     Y_cosmatrix = cosine_similarity(Y_embeded).flatten().tolist()
-    person,_ = pearsonr(X_cosmatrix,Y_cosmatrix)
+    person,_ = scipy.stats.pearsonr(X_cosmatrix,Y_cosmatrix)
     return zoom(abs(person),-1,1)
 
 
@@ -402,7 +395,7 @@ def spearman_consistency(data:Data):
     Y_embeded = modal2func[data.Y_modal[0]](data.Y[data.Y_modal[0]])
     X_cosmatrix = cosine_similarity(X_embeded).flatten().tolist()
     Y_cosmatrix = cosine_similarity(Y_embeded).flatten().tolist()
-    spearmanr,_ = spearmanr(X_cosmatrix,Y_cosmatrix)
+    spearmanr,_ = scipy.stats.spearmanr(X_cosmatrix,Y_cosmatrix)
     return zoom(abs(spearmanr),-1,1)
 
 # 函数列表，元素为[指标名，触发函数，计算函数]
