@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 def zoom(x,min,max) -> float:
     """
@@ -9,7 +10,10 @@ def zoom(x,min,max) -> float:
 
     return: 放缩后的值，0~1
     """
-    return x/(max-min)
+    max-=min
+    x-=min
+    min-=min
+    return x/max
 
 def shannon_entropy(probs:list) -> float:
     """
@@ -39,4 +43,22 @@ def spread_probs(labels:list) -> list:
         speads[label]=speads.get(label,0)+1
     for k,v in speads.items():
         speads[k]=v/length
-    return speads
+    return list(speads.values())
+
+def image_binary(matrix:np.ndarray) -> np.ndarray:
+    """
+    将图像转换为二值矩阵
+    matrix：图像矩阵
+
+    return：返回的二值图像矩阵
+    """
+    # 如果是彩色图像则首先转换为灰度图像
+    image_gray = []
+    if matrix.ndim == 3:
+        R, G, B = matrix[:, :, 0], matrix[:, :, 1], matrix[:, :, 2]
+        image_gray = 0.2989 * R + 0.5870 * G + 0.1140 * B
+    else:
+        image_gray = matrix
+    # 灰度图像转换为二值矩阵
+    binary_image = (image_gray > 127).astype(np.uint8)
+    return binary_image

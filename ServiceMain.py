@@ -2,7 +2,6 @@
 import os
 import json
 from config.Data import Data
-from tools.readata import read_XY
 from service.consistency import consistency_funclist
 from service.diversity import diversity_funclist
 from service.normative import normative_funclist
@@ -16,9 +15,9 @@ def trig(data):
     cons_trigged=[tfunc(data) for name,tfunc,_ in consistency_funclist]
     print('一致性指标可用性',cons_trigged)
     divers_trigged=[tfunc(data) for name,tfunc,_ in diversity_funclist]
-    print('多样性指标可用性',cons_trigged)
+    print('多样性指标可用性',divers_trigged)
     norma_trigged=[tfunc(data) for name,tfunc,_ in normative_funclist]
-    print('多样性指标可用性',cons_trigged)
+    print('规范性指标可用性',norma_trigged)
     return cons_trigged,divers_trigged,norma_trigged
 
 def compute(data,cons_trigged,divers_trigged,norma_trigged):
@@ -38,23 +37,21 @@ def main(args):
     dataset_dir=f'data/dataset/{args.username}-{args.datasetname}'
     result_dir=f'data/result/{args.username}-{args.datasetname}'
     print('合并数据集和元数据')
-    X,Y=read_XY(dataset_dir)
     data=json.loads(args.metadata)
-    data['X']=X
-    data['Y']=Y
-    data=Data(data)
+    data=Data(data, dataset_dir)
     print('判断指标是否可用')
     cons_trigged, divers_trigged, norma_trigged=trig(data)
     print('计算每个指标的分数')
-    cons_scores, divers_scores, norma_scores=compute(cons_trigged, divers_trigged, norma_trigged)
+    cons_scores, divers_scores, norma_scores=compute(data, cons_trigged, divers_trigged, norma_trigged)
     print('计算每类指标的分数和总分')
     pure_cons_scores=[one for one in cons_scores if one!=-1]
     pure_divers_scores=[one for one in divers_scores if one!=-1]
     pure_norma_scores=[one for one in norma_scores if one!=-1]
-    cons_score=round(sum(pure_cons_scores)/len(pure_cons_scores),4)
-    divers_score=round(sum(pure_divers_scores)/len(pure_divers_scores),4)
-    norma_score=round(sum(pure_norma_scores)/len(pure_norma_scores),4)
-    final_score=round((cons_score+divers_score+norma_score)/3,4)
+    cons_score=round(sum(pure_cons_scores)/len(pure_cons_scores),4) if len(pure_cons_scores)!=0 else -1
+    divers_score=round(sum(pure_divers_scores)/len(pure_divers_scores),4) if len(pure_divers_scores)!=0 else -1
+    norma_score=round(sum(pure_norma_scores)/len(pure_norma_scores),4) if len(pure_norma_scores)!=0 else -1
+    three_scores=[one for one in [cons_score,divers_score,norma_score] if one!=-1]
+    final_score=round(sum(three_scores)/len(three_scores),4) if len(three_scores)!=0 else -1
     # 保存结果和完成标识
     result={
         "总分":final_score,

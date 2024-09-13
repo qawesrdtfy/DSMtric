@@ -1,5 +1,5 @@
-from ..tools.funcs import *
-from ..config.Data import Data
+from tools.funcs import *
+from config.Data import Data
 
 def trig_class_diversity(data:Data) -> bool:
     """
@@ -7,7 +7,7 @@ def trig_class_diversity(data:Data) -> bool:
     :param Y_modal: Y的模态
     :return: 是否触发，bool
     """
-    if len(data.Y_modal)==1 and data.Y_modal[0]=='类别':
+    if data.Y_modal==['类别']:
         return True
     return False
 def class_diversity(data:Data):
@@ -16,7 +16,7 @@ def class_diversity(data:Data):
     :param Y: 每个样本的类别
     :return: 类别多样性得分，范围0～1
     """
-    probs=spread_probs(data.Y)
+    probs=spread_probs(data.Y['类别'])
     score,therange=shannon_entropy(probs)
     score=zoom(score,therange[0],therange[1])
     return score
