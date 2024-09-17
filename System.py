@@ -101,12 +101,13 @@ def result():
             print('Abnormal Reponse:',formResult)
             return jsonify(formResult)
         # 如果没完成
-        if not os.path.exists(result_dir+'result.json'):
+        result_file=os.path.join(result_dir,'result.json')
+        if not os.path.exists(result_file):
             formResult = {"resultinfo":f'{username}的“{datasetname}”数据集评测未完成！',"result":{}}
             print('Normal Reponse:',formResult)
             return jsonify(formResult)
         # 如果已完成
-        result=json.load(open(result_dir+'result.json','r',encoding='utf-8'))
+        result=json.load(open(result_file,'r',encoding='utf-8'))
         formResult = {"resultinfo":f'{username}的“{datasetname}”数据集评测完成！',"result":result}
         print('Normal Reponse:',formResult)
         return jsonify(formResult)

@@ -2,21 +2,17 @@ import os
 import subprocess
 from flask import Flask,request,jsonify
 import json
+import torch
 from model.models import *
 
-docEncoder = DocEncoder('/data/sdb2/wyh/models/bert-base-chinese','cuda',128)
-vLmodel = VLmodel('/data/sdb2/lzy/LLM/Qwen2-VL-7B-Instruct')
-picEncoder = PicEncoder('/data/sdb2/wyh/models/vit-base-patch16-224','cuda')
-CLIP = Clip_Sim()
-audioEncoder = AudioEncoder(('/data/sdb2/wyh/models/clap-htsat-unfused','cuda'))
-ASRmodel = ASR('/data/sdb2/lzy/LLM/whisper-large-v3')
 # 后端服务启动
 app = Flask(__name__)
-
-
+ASRmodel = ASR('/data/sdb2/lzy/LLM/whisper-large-v3')
 config=None
+docEncoder = DocEncoder('/data/sdb2/wyh/models/bert-base-chinese','cuda',128)
 @app.route("/doc_encode",methods=['post','get'])
 def doc_encode():
+    torch.cuda.empty_cache()
     if request.method == "POST":
         data = json.loads(request.get_data(as_text=True))
         docs = data['docs']
@@ -26,8 +22,10 @@ def doc_encode():
         return jsonify(formResult)
     return 'connection ok!'
 
+vLmodel = VLmodel('/data/sdb2/lzy/LLM/Qwen2-VL-7B-Instruct')
 @app.route("/pic2doc",methods=['post','get'])
 def pic2doc():
+    torch.cuda.empty_cache()
     if request.method == "POST":
         data = json.loads(request.get_data(as_text=True))
         prompt = data['prompt']
@@ -38,8 +36,10 @@ def pic2doc():
         return jsonify(formResult)
     return 'connection ok!'
 
+picEncoder = PicEncoder('/data/sdb2/wyh/models/vit-base-patch16-224','cuda')
 @app.route("/pic_encode",methods=['post','get'])
 def pic_encode():
+    torch.cuda.empty_cache()
     if request.method == "POST":
         data = json.loads(request.get_data(as_text=True))
         pic_paths = data['pic_paths']
@@ -49,8 +49,10 @@ def pic_encode():
         return jsonify(formResult)
     return 'connection ok!'
 
+CLIPmode = Clip_Sim()
 @app.route("/CLIPmodel",methods=['post','get'])
 def CLIPmodel():
+    torch.cuda.empty_cache()
     if request.method == "POST":
         data = json.loads(request.get_data(as_text=True))
         pic_paths = data['pic_paths']
@@ -61,8 +63,10 @@ def CLIPmodel():
         return jsonify(formResult)
     return 'connection ok!'
 
+audioEncoder = AudioEncoder(('/data/sdb2/wyh/models/clap-htsat-unfused','cuda'))
 @app.route("/audio_encode",methods=['post','get'])
 def audio_encode():
+    torch.cuda.empty_cache()
     if request.method == "POST":
         data = json.loads(request.get_data(as_text=True))
         audios = data['audios']
