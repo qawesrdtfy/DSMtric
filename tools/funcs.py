@@ -75,7 +75,7 @@ def calculate_ttr(tokens) -> float:
 def batch_segment(texts, batch_size=500):
     """
     批量分词处理
-    texts: 文本数据集 (list of str)
+    texts: 文本数据集
     batch_size: 每次处理的文本数量
     return: 生成器，逐批返回分词结果
     """
@@ -91,3 +91,18 @@ def batch_segment(texts, batch_size=500):
     # 处理最后一个批次
     if batch_tokens:
         yield batch_tokens
+def compute_gini(frequencies):
+    """
+    计算基尼系数
+    frequencies: 词频
+    return: 基尼系数，取值范围 0-1
+    """
+    # 将词频按升序排列
+    frequencies = np.sort(frequencies)
+    n = len(frequencies)
+    # 计算累积频率的比例
+    cumulative_freqs = np.cumsum(frequencies) / sum(frequencies)
+    # 计算基尼系数
+    gini_index = 1 - 2 * np.sum(cumulative_freqs) / n
+
+    return gini_index
