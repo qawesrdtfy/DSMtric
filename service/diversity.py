@@ -133,4 +133,5 @@ diversity_funclist=[["类别多样性",trig_class_diversity,class_diversity],
                     ["主题多样性",trig_topic_diversity,topic_diversity],
                     ["文本长度多样性", trig_length_diversity, length_diversity],
                     ["词汇量多样性", trig_vocabulary_diversity, vocabulary_diversity]
+                    ["词汇丰富度", trig_vocabulary_richness, vocabulary_richnes]
                     ]
