@@ -49,9 +49,9 @@ def trig_length_diversity(data:Data) -> bool:
     :param X_modal: 每个样本的模态，要求是文本
     :return: 是否触发，bool
     """
-    if len(data.X_modal)==["文本"]:
-        return False
-    return True
+    if data.X_modal==["文本"]:
+        return True
+    return False
 
 def length_diversity(data:Data):
     """
@@ -72,9 +72,9 @@ def trig_vocabulary_diversity(data:Data) -> bool:
     :param X_modal: 每个样本的模态，要求是文本
     :return: 是否触发，bool
     """
-    if len(data.X_modal)==["文本"]:
-        return False
-    return True
+    if data.X_modal==["文本"]:
+        return True
+    return False
 
 def vocabulary_diversity(data:Data):
     """
@@ -105,9 +105,9 @@ def trig_vocabulary_richness(data:Data) ->bool:
     :param X_modal: 每个样本的模态，要求是文本
     :return: 是否触发，bool
     """
-    if len(data.X_modal)==["文本"]:
-        return False
-    return True
+    if data.X_modal==["文本"]:
+        return True
+    return False
 
 def vocabulary_richness(data:Data):
     """
@@ -132,6 +132,6 @@ def vocabulary_richness(data:Data):
 diversity_funclist=[["类别多样性",trig_class_diversity,class_diversity],
                     ["主题多样性",trig_topic_diversity,topic_diversity],
                     ["文本长度多样性", trig_length_diversity, length_diversity],
-                    ["词汇量多样性", trig_vocabulary_diversity, vocabulary_diversity]
-                    ["词汇丰富度", trig_vocabulary_richness, vocabulary_richnes]
+                    ["词汇量多样性", trig_vocabulary_diversity, vocabulary_diversity],
+                    ["词汇丰富度", trig_vocabulary_richness, vocabulary_richness]
                     ]
