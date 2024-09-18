@@ -44,3 +44,8 @@ def ask_WhisperModel(audios:list):
     r=requests.post('0.0.0.0:48812/audio2text',json={"audios":audios})
     r=r.json()['resultinfo']
     return r
+
+def ask_Discrimination(text:list):
+    r=requests.post('0.0.0.0:48812/discrimination',json={"text":text})
+    r=r.json()['resultinfo']
+    return r

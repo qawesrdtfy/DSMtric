@@ -87,6 +87,18 @@ def audio_encode():
         return jsonify(formResult)
     return 'connection ok!'
 
+Qwen2 = LoadLLM('/data/sdb2/lzy/LLM/Qwen2-7B-Instruct')
+@app.route("/discrimination",methods=['post','get'])
+def discrimination():
+    if request.method == "POST":
+        data = json.loads(request.get_data(as_text=True))
+        text = data['text']
+        response = Qwen2.discrimination(text)
+        formResult = {"resultinfo":response}
+        print('Normal Reponse:',"文本偏见歧视接口调用成功")
+        return jsonify(formResult)
+    return 'connection ok!'
+
 if __name__ == '__main__':
     app.config['JSON_AS_ASCII']=False
     app.run(host='0.0.0.0',port=48812)
