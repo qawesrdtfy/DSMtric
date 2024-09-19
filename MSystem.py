@@ -99,6 +99,17 @@ def discrimination():
         return jsonify(formResult)
     return 'connection ok!'
 
+@app.route("/valid",methods=['post','get'])
+def LogicalLegality():
+    if request.method == "POST":
+        data = json.loads(request.get_data(as_text=True))
+        text = data['text']
+        response = Qwen2.valid(text)
+        formResult = {"resultinfo":response}
+        print('Normal Reponse:',"文本现实逻辑接口调用成功")
+        return jsonify(formResult)
+    return 'connection ok!'
+
 if __name__ == '__main__':
     app.config['JSON_AS_ASCII']=False
     app.run(host='0.0.0.0',port=48812)

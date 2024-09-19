@@ -49,3 +49,8 @@ def ask_Discrimination(text:list):
     r=requests.post('0.0.0.0:48812/discrimination',json={"text":text})
     r=r.json()['resultinfo']
     return r
+
+def ask_LogicalLegality(text:list):
+    r=requests.post('0.0.0.0:48812/valid',json={"text":text})
+    r=r.json()['resultinfo']
+    return r

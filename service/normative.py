@@ -10,7 +10,7 @@ def trig_discrimination_normative(data:Data) -> bool:
 def discrimination_normative(data:Data):
     """
     文本规范性 --偏见歧视检测
-    统计含有偏见歧视的文本的占比
+    统计不含有偏见歧视的文本的占比
     """
     text = data.X['文本']
     res = ask_Discrimination(text)
@@ -18,7 +18,21 @@ def discrimination_normative(data:Data):
     for it in res:
         if it == 'Yes':
             cnt += 1
-    return round(cnt/len(text))
+    return round(cnt/len(text),4)
+
+def LogicalLegality_normative(data:Data):
+    """
+    文本规范性 --现实逻辑错误检测
+    统计不含有现实逻辑错误的文本的占比
+    """
+    text = data.X['文本']
+    res = ask_LogicalLegality(text)
+    cnt = 0
+    for it in res:
+        if it == 'Yes':
+            cnt += 1
+    return round(cnt/len(text),4)
 
 
-normative_funclist=[["偏见歧视",trig_discrimination_normative,discrimination_normative]]
+normative_funclist=[["偏见歧视",trig_discrimination_normative,discrimination_normative],
+                    ["现实逻辑错误",trig_discrimination_normative,LogicalLegality_normative]]
