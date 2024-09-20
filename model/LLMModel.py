@@ -84,11 +84,18 @@ class LoadLLM:
             Q.append(messages)
         return self.choice(Q,['Yes','No'])
 
-    def labelOK(self,text:list):
+    def labelOK(self,rule,text:list):
         """
         处理是否符合标注规则
         """
-        pass
+        Q = []
+        for it in text:
+            messages = [
+                {"role":"system","content":f"接下来会给你一个数据集及其标注结果，标注规则为：{rule}。你的任务是判断文本中的每个X对应的标注Y是否符合标注规则，如果符合上述标注规则输出Yes，否则输出No，除此之外不得输出任何多余内容。"},
+                {"role":"user","content":f"X:{it['X']}\n标注结果Y:{it['Y']}"}
+            ]
+            Q.append(messages)
+        return self.choice(Q,['Yes','No'])
 
 
 if __name__ == "__main__":
@@ -96,4 +103,6 @@ if __name__ == "__main__":
     text = model.discrimination(['黑人都是笨蛋','我们都有美好的未来'])
     print(text)
     text = model.valid(['鱼在天上飞','鸟在水底游泳','人在坐飞机'])
+    print(text)
+    text = model.labelOK('X为文本。Y为对应的X文本中是否含有错别字，Yes表明X中含有错别字，No表示X中不含有错别字。',[{"X":"身体健康","Y":"Yes"},{"X":"使用模型跑测试一遍数据集","Y":"No"},{"X":"我来自北京邮电大学","Y":"No"}])
     print(text)
