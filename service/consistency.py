@@ -4,7 +4,7 @@ from rouge_chinese import Rouge
 from skimage.metrics import structural_similarity as ssim
 from sklearn.metrics import jaccard_score
 from sklearn.metrics.pairwise import cosine_similarity
-from scipy.stats import pearsonr,spearmanr
+import scipy.stats
 from librosa.feature import mfcc
 from dtaidistance import dtw
 from tools.funcs import *
@@ -65,18 +65,8 @@ def trig_docontent_consistency(data:Data) -> bool:
     :param Y_per_annotater: 每个样本每个标注员的标注结果
     :return: 是否触发，bool
     """
-    if data.Y_modal==['文本']:
-        if len(data.Y_per_annotater['文本'])!=0:
-            # 要求每个样本每个标注员标注的都是字符串类型
-            for sample in data.Y_per_annotater['文本']:
-                for per_annotate in sample:
-                    if not isinstance(per_annotate,str):
-                        break
-                else:
-                    continue
-                break
-            else:
-                return True
+    if data.Y_modal==['文本'] and len(data.Y_per_annotater['文本'])!=0:
+        return True
     return False
 def docontent_consistency(data:Data):
     """
@@ -91,8 +81,8 @@ def docontent_consistency(data:Data):
         for i in range(len(sample_splited)):
             for j in range(i+1,len(sample_splited)):
                 scores.append(rouge.get_scores(sample_splited[i],sample_splited[j])[0]['rouge-l']['f'])
-        score=sum(scores)/len(scores)
-        all_scores.append(score)
+        if len(scores)!=0:
+            all_scores.append(sum(scores)/len(scores))
     return round(sum(all_scores)/len(all_scores),4)
 
 
@@ -208,8 +198,9 @@ def docfeature_consistency(data:Data):
     all_scores=[]
     for sample in data.Y_per_annotater['文本']:
         encoded_sample=ask_DocEncoder(sample)
-        cos_matric=cosine_similarity(encoded_sample)
-        score=np.sum(np.fill_diagonal(cos_matric,0)) / (len(sample)**2-len(sample))
+        cos_matrix=cosine_similarity(encoded_sample)
+        np.fill_diagonal(cos_matrix,0)
+        score=np.sum(cos_matrix) / (len(sample)**2-len(sample))
         all_scores.append(score)
     final_score=round(sum(all_scores)/len(all_scores),4)
     return zoom(final_score,-1,1)
@@ -233,8 +224,9 @@ def audiofeature_consistency(data:Data):
     all_scores=[]
     for sample in data.Y_per_annotater['音频']:
         encoded_sample=ask_AudioEncoder(sample)
-        cos_matric=cosine_similarity(encoded_sample)
-        score=np.sum(np.fill_diagonal(cos_matric,0)) / (len(sample)**2-len(sample))
+        cos_matrix=cosine_similarity(encoded_sample)
+        np.fill_diagonal(cos_matrix,0)
+        score=np.sum(cos_matrix) / (len(sample)**2-len(sample))
         all_scores.append(score)
     final_score=round(sum(all_scores)/len(all_scores),4)
     return zoom(final_score,-1,1)
@@ -259,8 +251,9 @@ def picfeature_consistency(data:Data):
     all_scores=[]
     for sample in data.Y_per_annotater['图像地址']:
         encoded_sample=ask_PicEncoder(sample)
-        cos_matric=cosine_similarity(encoded_sample)
-        score=np.sum(np.fill_diagonal(cos_matric,0)) / (len(sample)**2-len(sample))
+        cos_matrix=cosine_similarity(encoded_sample)
+        np.fill_diagonal(cos_matrix,0)
+        score=np.sum(cos_matrix) / (len(sample)**2-len(sample))
         all_scores.append(score)
     final_score=round(sum(all_scores)/len(all_scores),4)
     return zoom(final_score,-1,1)
@@ -339,7 +332,7 @@ def goals_consistency(data:Data):
         scores = []
         for i in range(len(sample)):
             for j in range(i+1,len(sample)):
-                scores.append(jaccard_score(image_binary(i), image_binary(j), average="samples"))
+                scores.append(jaccard_score(image_binary(sample(i)), image_binary(sample(j)), average="samples"))
                 score=sum(scores)/len(scores)
         all_scores.append(score)
     return round(sum(all_scores)/len(all_scores),4)
@@ -372,7 +365,7 @@ def person_consistency(data:Data):
     Y_embeded = modal2func[data.Y_modal[0]](data.Y[data.Y_modal[0]])
     X_cosmatrix = cosine_similarity(X_embeded).flatten().tolist()
     Y_cosmatrix = cosine_similarity(Y_embeded).flatten().tolist()
-    person,_ = pearsonr(X_cosmatrix,Y_cosmatrix)
+    person,_ = scipy.stats.pearsonr(X_cosmatrix,Y_cosmatrix)
     return zoom(abs(person),-1,1)
 
 
@@ -403,7 +396,7 @@ def spearman_consistency(data:Data):
     Y_embeded = modal2func[data.Y_modal[0]](data.Y[data.Y_modal[0]])
     X_cosmatrix = cosine_similarity(X_embeded).flatten().tolist()
     Y_cosmatrix = cosine_similarity(Y_embeded).flatten().tolist()
-    spearmanr,_ = spearmanr(X_cosmatrix,Y_cosmatrix)
+    spearmanr,_ = scipy.stats.spearmanr(X_cosmatrix,Y_cosmatrix)
     return zoom(abs(spearmanr),-1,1)
 
 def trig_audio_text_consistancy(data:Data):
@@ -437,6 +430,49 @@ def ASR_consistancy(data:Data):
         all_scores.append(score)
     return round(sum(all_scores)/len(all_scores),4)
 
+def trig_length_annotation_consistency(data:Data) -> bool:
+    """
+    文本同样本标注长度一致性的触发函数
+    :param Y_modal: Y的模态
+    :param Y_per_annotater: 每个样本每个标注员的标注结果
+    :return: 是否触发，bool
+    """
+    if data.Y_modal==['文本']:
+        if len(data.Y_per_annotater['文本'])!=0:
+            # 要求每个样本每个标注员标注的都是字符串类型
+            for sample in data.Y_per_annotater['文本']:
+                for per_annotate in sample:
+                    if not isinstance(per_annotate,str):
+                        break
+                else:
+                    continue
+                break
+            else:
+                return True
+    return False
+def length_annotation_consistancy(data:Data):
+    """
+    文本同样本标注长度一致性
+    :param Y_per_annotater:每个样本每个标注员的标注结果
+    :return:变异系数得分，范围0~1
+    """
+    all_scores = []
+    for sample in data.Y_per_annotater['文本']:
+        seg_list = []
+        for mark in sample:
+            seg_list.append(jieba.lcut(mark))
+        lengths = [len(text) for text in seg_list]
+        # 计算平均值
+        mean_length = np.mean(lengths)
+        # 计算标准差
+        std_dev = np.std(lengths)
+        #计算变异系数,一个0~1的值
+        cv = (std_dev / mean_length)
+        all_scores.append(cv)
+    final_score=round(sum(all_scores)/len(all_scores),4)
+    return final_score
+
+
 # 函数列表，元素为[指标名，触发函数，计算函数]
 consistency_funclist=[["类别一致性",trig_class_consistency,class_consistency],
                     ["文本内容一致性",trig_docontent_consistency,docontent_consistency],
@@ -449,4 +485,5 @@ consistency_funclist=[["类别一致性",trig_class_consistency,class_consistenc
                     ["线性相关一致性",trig_person_consistency,person_consistency],
                     ["非线性相关一致性",trig_spearman_consistency,spearman_consistency],
                     ["目标一致性",trig_goals_consistency,goals_consistency],
-                    ["ASR一致性",trig_audio_text_consistancy,ASR_consistancy]]
+                    ["ASR一致性",trig_audio_text_consistancy,ASR_consistancy],
+                    ["文本同样本标注长度一致性",trig_length_annotation_consistency,length_annotation_consistancy]]

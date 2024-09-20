@@ -14,9 +14,9 @@ def read_structure(path): # -> list[np.ndarray]
 def read_str(path): #  -> list[str]
     files=[os.path.join(path,one) for one in os.listdir(path)]
     if len(files)==1:
-        samples=[line.strip('\n') for line in open(files[0],'r',encoding='utf-8').readlines()]
+        samples=[line.strip('\n') for line in open(files[0],'r',encoding='utf-8').readlines() if line!='\n']
     else:
-        samples=[open(file,'r',encoding='utf-8').readlines() for file in files]
+        samples=['\n'.join(open(file,'r',encoding='utf-8').readlines()) for file in files]
     return samples
 
 def read_picture(path): #  -> list[np.ndarray]
