@@ -17,6 +17,8 @@ class Data:
         self.X_modal=data.get('X_modal',[])
         # Y的模态：类别、文本、图像、音频、视频、语音
         self.Y_modal=data.get('Y_modal',[])
+        # 标注规则
+        self.rule=data.get('rule','')
         # 每个样本的主题
         self.X_topic=self._get_X_topic(dataset_dir)
         # 每个样本每个标注员的标注结果
