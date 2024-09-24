@@ -1,6 +1,10 @@
 import math
 import numpy as np
 import jieba
+from collections import Counter
+from scipy.stats import entropy
+import cv2
+from skimage.feature import graycomatrix, graycoprops
 def zoom(x,min,max) -> float:
     """
     将取值放缩到0～1之间
@@ -77,6 +81,7 @@ def batch_segment(texts, batch_size=500):
     批量分词处理
     texts: 文本数据集
     batch_size: 每次处理的文本数量
+
     return: 生成器，逐批返回分词结果
     """
     batch_tokens = []
@@ -95,6 +100,7 @@ def compute_gini(frequencies):
     """
     计算基尼系数
     frequencies: 词频
+
     return: 基尼系数，取值范围 0-1
     """
     # 将词频按升序排列
@@ -106,3 +112,81 @@ def compute_gini(frequencies):
     gini_index = 1 - 2 * np.sum(cumulative_freqs) / n
 
     return gini_index
+
+def quantize_colors(image,bins=16):
+    """
+    量化颜色，把原来复杂的颜色空间量化到指定的bins区间，减少颜色数量
+    image: 图像的RGB矩阵
+    bins: 量化的区间个数
+
+    return: 量化后的图像矩阵
+    """
+    img_quantized = image // (256 // bins)
+    return img_quantized
+
+
+def compute_color_frequencies(image, bins=256):
+    """
+    计算每个图像的颜色分布频率
+    image: 图像的RGB矩阵
+    bins: 量化的区间个数
+
+    return: 图像矩阵在每个区间的频率统计
+    """
+    img_quantized = quantize_colors(image, bins)
+    pixels = img_quantized.reshape(-1, 3)
+    pixels_tuple = [tuple(pixel) for pixel in pixels]
+    color_counter = Counter(pixels_tuple)
+    return color_counter
+
+
+def compute_image_entropy(color_counter):
+    """
+    计算图像颜色熵值
+    color_counter: 图像矩阵在每个区间的频率统计
+
+    return: 熵值
+    """
+    total_pixels = sum(color_counter.values())
+    # 计算每种颜色出现的概率
+    probabilities = np.array(list(color_counter.values())) / total_pixels
+    return entropy(probabilities,base=2)
+
+
+def extract_color_histogram(image):
+    """
+    提取颜色直方图作为颜色特征
+    image: 图像的RGB矩阵
+
+    return: 一维数组，表示RGB三个通道的颜色分布
+    """
+    hist = cv2.calcHist([image], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
+    hist = cv2.normalize(hist, hist).flatten()
+    return hist
+
+
+def extract_shape_features(image):
+    """
+    提取形状特征 (使用边缘检测)
+    image: 图像的RGB矩阵
+
+    return: 边缘数量，作为形状特征
+    """
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    edges = cv2.Canny(gray, 100, 200)
+    return np.sum(edges)
+
+#
+def extract_texture_features(image):
+    """
+    提取灰度共生矩阵 (GLCM) 的纹理特征
+    image: 图像的RGB矩阵
+
+    return: contrast 对比度, dissimilarity 不相似度, homogeneity 均匀度
+    """
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    glcm = graycomatrix(gray, distances=[1], angles=[0], levels=256, symmetric=True, normed=True)
+    contrast = graycoprops(glcm, 'contrast')[0, 0] #值越高，图像对比度越明显  取值 0-无穷
+    dissimilarity = graycoprops(glcm, 'dissimilarity')[0, 0] #值越高，图像中相邻像素的灰度差异越大
+    homogeneity = graycoprops(glcm, 'homogeneity')[0, 0] #值越高，图像中相邻像素的灰度值越相似。
+    return contrast, dissimilarity, homogeneity
