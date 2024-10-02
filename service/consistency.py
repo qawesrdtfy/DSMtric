@@ -454,6 +454,7 @@ def length_annotation_consistancy(data:Data):
     :return:变异系数得分，范围0~1
     """
     all_scores = []
+    max = 0
     for sample in data.Y_per_annotater['文本']:
         seg_list = []
         for mark in sample:
@@ -465,9 +466,10 @@ def length_annotation_consistancy(data:Data):
         std_dev = np.std(lengths)
         #计算变异系数,一个0~1的值
         cv = (std_dev / mean_length)
+        max = cv if cv > max else max
         all_scores.append(cv)
     final_score=round(sum(all_scores)/len(all_scores),4)
-    return final_score
+    return 1 - zoom(final_score, 0, max)
 
 
 # 函数列表，元素为[指标名，触发函数，计算函数]
