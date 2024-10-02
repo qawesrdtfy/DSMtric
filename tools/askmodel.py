@@ -41,21 +41,21 @@ def ask_AudioEncoder(audios:list, B=10):
     return rets
 
 def ask_WhisperModel(audios:list):
-    r=requests.post('0.0.0.0:48812/audio2text',json={"audios":audios})
+    r=requests.post('http://0.0.0.0:48812/audio2text',json={"audios":audios})
     r=r.json()['resultinfo']
     return r
 
 def ask_Discrimination(text:list):
-    r=requests.post('0.0.0.0:48812/discrimination',json={"text":text})
+    r=requests.post('http://0.0.0.0:48812/discrimination',json={"text":text})
     r=r.json()['resultinfo']
     return r
 
 def ask_LogicalLegality(text:list):
-    r=requests.post('0.0.0.0:48812/valid',json={"text":text})
+    r=requests.post('http://0.0.0.0:48812/valid',json={"text":text})
     r=r.json()['resultinfo']
     return r
 
 def ask_Guideline(text_pair:list,rule:str):
-    r=requests.post('0.0.0.0:48812/guideline',json={"text_pair":text_pair,"rule":rule})
+    r=requests.post('http://0.0.0.0:48812/guideline',json={"text_pair":text_pair,"rule":rule})
     r=r.json()['resultinfo']
     return r

@@ -49,6 +49,7 @@ def main(args):
     pure_norma_scores=[one for one in norma_scores if one!=-1]
     cons_score=round(sum(pure_cons_scores)/len(pure_cons_scores),4) if len(pure_cons_scores)!=0 else -1
     divers_score=round(sum(pure_divers_scores)/len(pure_divers_scores),4) if len(pure_divers_scores)!=0 else -1
+    print(pure_norma_scores)
     norma_score=round(sum(pure_norma_scores)/len(pure_norma_scores),4) if len(pure_norma_scores)!=0 else -1
     three_scores=[one for one in [cons_score,divers_score,norma_score] if one!=-1]
     final_score=round(sum(three_scores)/len(three_scores),4) if len(three_scores)!=0 else -1

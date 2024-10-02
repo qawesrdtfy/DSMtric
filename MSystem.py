@@ -7,9 +7,37 @@ from model.models import *
 
 # 后端服务启动
 app = Flask(__name__)
-ASRmodel = ASR('/data/sdb2/lzy/LLM/whisper-large-v3')
-config=None
-docEncoder = DocEncoder('/data/sdb2/wyh/models/bert-base-chinese','cuda',128)
+config=json.load(open('config/config.json','r',encoding='utf-8'))
+if config['DocEncoder']:
+    docEncoder = DocEncoder('/data/sdb2/wyh/models/bert-base-chinese','cuda',128)
+else:
+    docEncoder = None
+if config['VLmodel']:
+    vLmodel = VLmodel('/data/sdb2/lzy/LLM/Qwen2-VL-7B-Instruct')
+else:
+    vLmodel = None
+if config['PicEncoder']:
+    picEncoder = PicEncoder('/data/sdb2/wyh/models/vit-base-patch16-224','cuda')
+else:
+    picEncoder = None
+if config['Clip_Sim']:
+    CLIPmode = Clip_Sim()
+else:
+    CLIPmode = None
+if config['AudioEncoder']:
+    audioEncoder = AudioEncoder(('/data/sdb2/wyh/models/clap-htsat-unfused','cuda'))
+else:
+    audioEncoder = None
+if config['ASR']:
+    ASRmodel = ASR('/data/sdb2/lzy/LLM/whisper-large-v3')
+else:
+    ASRmodel = None
+if config['LoadLLM']:
+    Qwen2 = LoadLLM('/data/sdb2/lzy/LLM/Qwen2-7B-Instruct')
+else:
+    Qwen2 = None
+
+
 @app.route("/doc_encode",methods=['post','get'])
 def doc_encode():
     torch.cuda.empty_cache()
@@ -22,7 +50,6 @@ def doc_encode():
         return jsonify(formResult)
     return 'connection ok!'
 
-vLmodel = VLmodel('/data/sdb2/lzy/LLM/Qwen2-VL-7B-Instruct')
 @app.route("/pic2doc",methods=['post','get'])
 def pic2doc():
     torch.cuda.empty_cache()
@@ -36,7 +63,6 @@ def pic2doc():
         return jsonify(formResult)
     return 'connection ok!'
 
-picEncoder = PicEncoder('/data/sdb2/wyh/models/vit-base-patch16-224','cuda')
 @app.route("/pic_encode",methods=['post','get'])
 def pic_encode():
     torch.cuda.empty_cache()
@@ -49,7 +75,6 @@ def pic_encode():
         return jsonify(formResult)
     return 'connection ok!'
 
-CLIPmode = Clip_Sim()
 @app.route("/CLIPmodel",methods=['post','get'])
 def CLIPmodel():
     torch.cuda.empty_cache()
@@ -57,13 +82,12 @@ def CLIPmodel():
         data = json.loads(request.get_data(as_text=True))
         pic_paths = data['pic_paths']
         text = data['text']
-        sim = [CLIP.calculate_similarity(item,text[i]) for i,item in enumerate(pic_paths)]
+        sim = [CLIPmode.calculate_similarity(item,text[i]) for i,item in enumerate(pic_paths)]
         formResult = {"resultinfo":sim}
         print('Normal Reponse:',"图文向量相似度接口调用成功")
         return jsonify(formResult)
     return 'connection ok!'
 
-audioEncoder = AudioEncoder(('/data/sdb2/wyh/models/clap-htsat-unfused','cuda'))
 @app.route("/audio_encode",methods=['post','get'])
 def audio_encode():
     torch.cuda.empty_cache()
@@ -77,7 +101,7 @@ def audio_encode():
     return 'connection ok!'
 
 @app.route("/audio2text",methods=['post','get'])
-def audio_encode():
+def audio2text():
     if request.method == "POST":
         data = json.loads(request.get_data(as_text=True))
         audios = data['audios']
@@ -87,7 +111,6 @@ def audio_encode():
         return jsonify(formResult)
     return 'connection ok!'
 
-Qwen2 = LoadLLM('/data/sdb2/lzy/LLM/Qwen2-7B-Instruct')
 @app.route("/discrimination",methods=['post','get'])
 def discrimination():
     if request.method == "POST":
@@ -100,7 +123,7 @@ def discrimination():
     return 'connection ok!'
 
 @app.route("/valid",methods=['post','get'])
-def LogicalLegality():
+def valid():
     if request.method == "POST":
         data = json.loads(request.get_data(as_text=True))
         text = data['text']
@@ -111,7 +134,7 @@ def LogicalLegality():
     return 'connection ok!'
 
 @app.route("/guideline",methods=['post','get'])
-def LogicalLegality():
+def guideline():
     if request.method == "POST":
         data = json.loads(request.get_data(as_text=True))
         text_pair = data['text_pair']
