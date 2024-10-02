@@ -1,9 +1,9 @@
 {
-    "DocEncoder":true,
-    "VLmodel":false,
-    "PicEncoder":false,
+    "DocEncoder":false,
+    "VLmodel":true,
+    "PicEncoder":true,
     "Clip_Sim":false,
     "AudioEncoder":false,
     "ASR":false,
-    "LoadLLM":true
+    "LoadLLM":false
 }

@@ -104,19 +104,17 @@ def audiocontent_consistency(data:Data):
     :return: 内容一致性得分，范围0～1
     """
     all_scores=[]
-    maxone=0
     for sample in data.Y_per_annotater['音频']:
         scores=[]
         mfcc_sample = [mfcc(one) for one in sample]
         for i in range(len(mfcc_sample)):
             for j in range(i+1,len(mfcc_sample)):
                 d=dtw(mfcc_sample[i],mfcc_sample[j])
-                maxone=d if d>maxone else maxone
                 scores.append(d)
         score=sum(scores)/len(scores)
         all_scores.append(score)
     final_score=round(sum(all_scores)/len(all_scores),4)
-    return 1-zoom(final_score,0,maxone)
+    return 1-min(zoom(final_score,0,2),1) # 这里的2是个超参数
 
 
 def trig_image_text_consistancy(data:Data):
@@ -266,6 +264,7 @@ def trig_visual_consistency(data:Data) -> bool:
     :param Y_per_annotater: 每个样本每个标注员的标注结果
     :return: 是否触发，bool
     """
+    bad=False
     if data.Y_modal==['图像']:
         if len(data.Y_per_annotater['图像'])!=0:
             # 要求每个样本每个标注员标注的都是numpy矩阵类型，并且尺寸相同
@@ -273,13 +272,11 @@ def trig_visual_consistency(data:Data) -> bool:
             for sample in data.Y_per_annotater['图像']:
                 for per_annotate in sample:
                     if not isinstance(per_annotate,np.ndarray) or per_annotate.shape!=shape:
+                        bad=True
                         break
-                else:
-                    continue
-                break
-            else:
-                return True
-        return True
+                if bad:
+                    break
+            return not bad
     return False
 def visual_consistency(data:Data):
     """
@@ -292,7 +289,7 @@ def visual_consistency(data:Data):
         scores=[]
         for i in range(len(sample)):
             for j in range(i+1,len(sample)):
-                scores.append(ssim(sample[i], sample[j], multichannel=True))
+                scores.append(ssim(sample[i], sample[j], multichannel=True, win_size=11,channel_axis=2))
         score=sum(scores)/len(scores)
         all_scores.append(score)
     return round(sum(all_scores)/len(all_scores),4)
@@ -361,8 +358,8 @@ def person_consistency(data:Data):
         "音频":ask_AudioEncoder,
         "图像":ask_PicEncoder
     }
-    X_embeded = modal2func[data.X_modal[0]](data.X[data.X_modal[0]])
-    Y_embeded = modal2func[data.Y_modal[0]](data.Y[data.Y_modal[0]])
+    X_embeded = modal2func[data.X_modal[0]](data.X[data.X_modal[0]]) if data.X_modal[0] not in ['图像'] else modal2func[data.X_modal[0]](data.X[data.X_modal[0]+'地址'])
+    Y_embeded = modal2func[data.Y_modal[0]](data.Y[data.Y_modal[0]]) if data.Y_modal[0] not in ['图像'] else modal2func[data.Y_modal[0]](data.Y[data.Y_modal[0]+'地址'])
     X_cosmatrix = cosine_similarity(X_embeded).flatten().tolist()
     Y_cosmatrix = cosine_similarity(Y_embeded).flatten().tolist()
     person,_ = scipy.stats.pearsonr(X_cosmatrix,Y_cosmatrix)
@@ -392,8 +389,8 @@ def spearman_consistency(data:Data):
         "音频":ask_AudioEncoder,
         "图像":ask_PicEncoder
     }
-    X_embeded = modal2func[data.X_modal[0]](data.X[data.X_modal[0]])
-    Y_embeded = modal2func[data.Y_modal[0]](data.Y[data.Y_modal[0]])
+    X_embeded = modal2func[data.X_modal[0]](data.X[data.X_modal[0]]) if data.X_modal[0] not in ['图像'] else modal2func[data.X_modal[0]](data.X[data.X_modal[0]+'地址'])
+    Y_embeded = modal2func[data.Y_modal[0]](data.Y[data.Y_modal[0]]) if data.Y_modal[0] not in ['图像'] else modal2func[data.Y_modal[0]](data.Y[data.Y_modal[0]+'地址'])
     X_cosmatrix = cosine_similarity(X_embeded).flatten().tolist()
     Y_cosmatrix = cosine_similarity(Y_embeded).flatten().tolist()
     spearmanr,_ = scipy.stats.spearmanr(X_cosmatrix,Y_cosmatrix)
