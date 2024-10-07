@@ -329,7 +329,7 @@ def goals_consistency(data:Data):
         scores = []
         for i in range(len(sample)):
             for j in range(i+1,len(sample)):
-                scores.append(jaccard_score(image_binary(sample(i)), image_binary(sample(j)), average="samples"))
+                scores.append(jaccard_score(image_binary(sample[i]), image_binary(sample[j]), average="samples"))
                 score=sum(scores)/len(scores)
         all_scores.append(score)
     return round(sum(all_scores)/len(all_scores),4)

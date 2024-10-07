@@ -14,6 +14,8 @@ def zoom(x,min,max) -> float:
 
     return: 放缩后的值，0~1
     """
+    if abs(max-min)<1e-6:
+        return 0
     max-=min
     x-=min
     min-=min

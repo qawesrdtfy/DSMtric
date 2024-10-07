@@ -60,7 +60,7 @@ def picShape_diversity(data:Data):
     :param X: 原始图像
     :return: 图像尺寸和比例多样性得分，范围0～1
     """
-    pictures = data.X["图像地址"]
+    pictures = data.X["图像"]
     shapes = []
     proportion = []
     for i,item in enumerate(pictures):
