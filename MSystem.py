@@ -36,6 +36,10 @@ if config['LoadLLM']:
     Qwen2 = LoadLLM('/data/sdb2/lzy/LLM/Qwen2-7B-Instruct')
 else:
     Qwen2 = None
+if config['MacBert']:
+    SpellingCheck = MBert('/data/sdb2/lzy/LLM/macbert4csc-base-chinese')
+else:
+    SpellingCheck = None
 
 
 @app.route("/doc_encode",methods=['post','get'])
@@ -142,6 +146,17 @@ def guideline():
         response = Qwen2.labelOK(rule,text_pair)
         formResult = {"resultinfo":response}
         print('Normal Reponse:',"文本标注规则接口调用成功")
+        return jsonify(formResult)
+    return 'connection ok!'
+
+@app.route("/WrongSpelling",methods=['post','get'])
+def WrongSpelling():
+    if request.method == "POST":
+        data = json.loads(request.get_data(as_text=True))
+        text = data['text']
+        response = SpellingCheck(text)
+        formResult = {"resultinfo":response}
+        print('Normal Reponse:',"中文错别字识别接口调用成功")
         return jsonify(formResult)
     return 'connection ok!'
 

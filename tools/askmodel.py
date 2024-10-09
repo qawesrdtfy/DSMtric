@@ -60,3 +60,8 @@ def ask_Guideline(text_pair:list,rule:str):
     r=requests.post('http://0.0.0.0:48812/guideline',json={"text_pair":text_pair,"rule":rule})
     r=r.json()['resultinfo']
     return r
+
+def ask_MBert(text:list):
+    r=requests.post('http://0.0.0.0:48812/WrongSpelling',json={"text":text})
+    r=r.json()['resultinfo']
+    return r
