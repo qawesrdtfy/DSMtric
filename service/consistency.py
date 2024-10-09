@@ -106,10 +106,12 @@ def audiocontent_consistency(data:Data):
     all_scores=[]
     for sample in data.Y_per_annotater['音频']:
         scores=[]
-        mfcc_sample = [mfcc(one) for one in sample]
+        mfcc_sample = [mfcc(y=one).flatten() for one in sample]
         for i in range(len(mfcc_sample)):
             for j in range(i+1,len(mfcc_sample)):
-                d=dtw(mfcc_sample[i],mfcc_sample[j])
+                print(mfcc_sample[i])
+                print(mfcc_sample[i].shape)
+                d=dtw.distance(mfcc_sample[i],mfcc_sample[j])
                 scores.append(d)
         score=sum(scores)/len(scores)
         all_scores.append(score)

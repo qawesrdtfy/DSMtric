@@ -46,6 +46,8 @@ def Guideline(data:Data):
     for i,item in enumerate(textX):
         data_list.append({"X":item,"Y":textY[i]})
     res = ask_Guideline(data_list,rule)
+    # lzy快把这里补全啊！
+    return 0.8
 
 
 normative_funclist=[["偏见歧视",trig_discrimination_normative,discrimination_normative],

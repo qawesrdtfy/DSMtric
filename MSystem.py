@@ -25,7 +25,7 @@ if config['Clip_Sim']:
 else:
     CLIPmode = None
 if config['AudioEncoder']:
-    audioEncoder = AudioEncoder(('/data/sdb2/wyh/models/clap-htsat-unfused','cuda'))
+    audioEncoder = AudioEncoder('/data/sdb2/wyh/models/clap-htsat-unfused','cuda')
 else:
     audioEncoder = None
 if config['ASR']:

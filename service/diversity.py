@@ -129,6 +129,7 @@ def audioLength_diversity(data:Data):
     probs = spread_probs(length)
     score, therange = shannon_entropy(probs)
     score = zoom(score,therange[0],therange[1])
+    return score
 
 def trig_length_diversity(data:Data) -> bool:
     """
@@ -312,8 +313,8 @@ def audio_content_diversity(data:Data):
         mfcc = librosa.feature.mfcc(y=audio_sample, sr=sr)
         features.append((mfcc.mean(axis=1)))
     dist_matrix = pairwise_distances(features, metric='cosine')
-    score = np.mean(dist_matrix)
-    return score
+    score = np.mean(dist_matrix).item()
+    return round(score,3)
 
 # 函数列表，元素为[指标名，触发函数，计算函数]
 diversity_funclist=[["类别多样性",trig_class_diversity,class_diversity],
@@ -326,5 +327,5 @@ diversity_funclist=[["类别多样性",trig_class_diversity,class_diversity],
                     ["词汇丰富度", trig_vocabulary_richness, vocabulary_richness],
                     ["颜色多样性",trig_color_diversity,color_diversity],
                     ["视觉特征多样性",trig_visual_feature_diversity,visual_feature_diversity],
-                    ["内容多样性",trig_audio_content_diversity,audio_content_diversity]
+                    ["音频内容多样性",trig_audio_content_diversity,audio_content_diversity]
                     ]

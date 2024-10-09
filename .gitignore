@@ -2,3 +2,6 @@ test.py
 data/dataset/*
 data/result/*
 __pycache__
+system.out
+msystem.out
+testsystem.out

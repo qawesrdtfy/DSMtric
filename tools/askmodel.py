@@ -34,6 +34,7 @@ def ask_CLIPmodel(pic_paths:list,text:list, B=10):
 
 def ask_AudioEncoder(audios:list, B=10):
     rets=[]
+    audios=[one.tolist() for one in audios]
     for i in range(0,len(audios),B):
         r=requests.post('http://0.0.0.0:48812/audio_encode',json={"audios":audios[i:i+B]})
         r=r.json()['resultinfo']
