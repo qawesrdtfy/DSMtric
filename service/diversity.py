@@ -3,6 +3,7 @@ from config.Data import Data
 from collections import Counter
 import librosa
 from sklearn.metrics import pairwise_distances
+import math
 
 def trig_class_diversity(data:Data) -> bool:
     """
@@ -230,15 +231,17 @@ def color_diversity(data:Data):
     """
     计算图像的颜色多样性
     :param X: 每个样本，要求是图片
-    :return: 熵值，取值范围为0-log(n*n*n)  n表示每个通道量化区间个数
+    :return: 熵值，取值范围为0-1
     """
+    n_bins=8 #表示每个通道的量化区间个数
     images=data.X['图像']
     total_entropy = 0
     for image in images:
-        color_hist = extract_color_histogram(image)
+        color_hist = extract_color_histogram(image,n_bins)
         image_entropy = entropy(color_hist)
         total_entropy += image_entropy
-    return total_entropy / len(images)
+        score=zoom(total_entropy / len(images),0,math.log2(n_bins*n_bins*n_bins))
+    return score
 
 def trig_visual_feature_diversity(data:Data):
     """
