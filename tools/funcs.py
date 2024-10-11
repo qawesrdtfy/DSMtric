@@ -155,14 +155,14 @@ def compute_image_entropy(color_counter):
     return entropy(probabilities,base=2)
 
 
-def extract_color_histogram(image):
+def extract_color_histogram(image,n_bins):
     """
     提取颜色直方图作为颜色特征
     image: 图像的RGB矩阵
 
     return: 一维数组，表示RGB三个通道的颜色分布
     """
-    hist = cv2.calcHist([image], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
+    hist = cv2.calcHist([image], [0, 1, 2], None, [n_bins, n_bins, n_bins], [0, 256, 0, 256, 0, 256])
     hist = cv2.normalize(hist, hist).flatten()
     return hist
 
