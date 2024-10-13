@@ -391,6 +391,8 @@ def person_consistency(data: Data):
     X_cosmatrix = cosine_similarity(X_embeded).flatten().tolist()
     Y_cosmatrix = cosine_similarity(Y_embeded).flatten().tolist()
     person, _ = scipy.stats.pearsonr(X_cosmatrix, Y_cosmatrix)
+    if np.isnan(person):
+        return 0
     return zoom(abs(person), -1, 1)
 
 
@@ -426,6 +428,8 @@ def spearman_consistency(data: Data):
     X_cosmatrix = cosine_similarity(X_embeded).flatten().tolist()
     Y_cosmatrix = cosine_similarity(Y_embeded).flatten().tolist()
     spearmanr, _ = scipy.stats.spearmanr(X_cosmatrix, Y_cosmatrix)
+    if np.isnan(spearmanr):
+        return 0
     return zoom(abs(spearmanr), -1, 1)
 
 
@@ -471,18 +475,19 @@ def trig_length_annotation_consistency(data: Data) -> bool:
     :param Y_per_annotater: 每个样本每个标注员的标注结果
     :return: 是否触发，bool
     """
-    if data.Y_modal == ['文本']:
-        if len(data.Y_per_annotater['文本']) != 0:
-            # 要求每个样本每个标注员标注的都是字符串类型
-            for sample in data.Y_per_annotater['文本']:
-                for per_annotate in sample:
-                    if not isinstance(per_annotate, str):
-                        break
-                else:
-                    continue
-                break
-            else:
-                return True
+    # if data.Y_modal == ['文本']:
+    #     if len(data.Y_per_annotater['文本']) != 0:
+    #         # 要求每个样本每个标注员标注的都是字符串类型
+    #         for sample in data.Y_per_annotater['文本']:
+    #             for per_annotate in sample:
+    #                 if not isinstance(per_annotate, str):
+    #                     break
+    #             else:
+    #                 continue
+    #             break
+    #         else:
+    #             return True
+    # return False
     return False
 
 
@@ -492,23 +497,73 @@ def length_annotation_consistancy(data: Data):
     :param Y_per_annotater:每个样本每个标注员的标注结果
     :return:变异系数得分，范围0~1
     """
-    all_scores = []
-    max = 0
-    for sample in data.Y_per_annotater['文本']:
-        seg_list = []
-        for mark in sample:
-            seg_list.append(jieba.lcut(mark))
-        lengths = [len(text) for text in seg_list]
-        # 计算平均值
-        mean_length = np.mean(lengths)
-        # 计算标准差
-        std_dev = np.std(lengths)
-        # 计算变异系数,一个0~1的值
-        cv = (std_dev / mean_length)
-        max = cv if cv > max else max
-        all_scores.append(cv)
-    final_score = round(sum(all_scores)/len(all_scores), 4)
-    return 1 - zoom(final_score, 0, max)
+    # all_scores = []
+    # max = 0
+    # for sample in data.Y_per_annotater['文本']:
+    #     seg_list = []
+    #     for mark in sample:
+    #         seg_list.append(jieba.lcut(mark))
+    #     lengths = [len(text) for text in seg_list]
+    #     # 计算平均值
+    #     mean_length = np.mean(lengths)
+    #     # 计算标准差
+    #     std_dev = np.std(lengths)
+    #     # 计算变异系数,一个0~1的值
+    #     cv = (std_dev / mean_length)
+    #     max = cv if cv > max else max
+    #     all_scores.append(cv)
+    # final_score = round(sum(all_scores)/len(all_scores), 4)
+    # return 1 - zoom(final_score, 0, max)
+    return 0.5
+
+
+def trig_semantic_annotation_consistancy(data: Data) -> bool:
+    """
+    文本同样本标注语义一致性的触发函数
+    :param Y_modal: Y的模态
+    :param Y_per_annotater: 每个样本每个标注员的标注结果
+    :return: 是否触发，bool
+    """
+    # if data.Y_modal == ['文本']:
+    #     if len(data.Y_per_annotater['文本']) != 0:
+    #         # 要求每个样本每个标注员标注的都是字符串类型
+    #         for sample in data.Y_per_annotater['文本']:
+    #             for per_annotate in sample:
+    #                 if not isinstance(per_annotate, str):
+    #                     break
+    #             else:
+    #                 continue
+    #             break
+    #         else:
+    #             return True
+    # return False
+    return False
+
+
+def semantic_annotation_consistancy(data: Data):
+    """
+    文本同样本标注语义一致性
+    :param Y_per_annotater:每个样本每个标注员的标注结果
+    :return:变异系数得分，范围0~1
+    """
+    # all_scores = []
+    # max = 0
+    # for sample in data.Y_per_annotater['文本']:
+    #     seg_list = []
+    #     for mark in sample:
+    #         seg_list.append(jieba.lcut(mark))
+    #     lengths = [len(text) for text in seg_list]
+    #     # 计算平均值
+    #     mean_length = np.mean(lengths)
+    #     # 计算标准差
+    #     std_dev = np.std(lengths)
+    #     # 计算变异系数,一个0~1的值
+    #     cv = (std_dev / mean_length)
+    #     max = cv if cv > max else max
+    #     all_scores.append(cv)
+    # final_score = round(sum(all_scores)/len(all_scores), 4)
+    # return 1 - zoom(final_score, 0, max)
+    return 0.5
 
 
 # 函数列表，元素为[指标名，触发函数，计算函数]
@@ -530,4 +585,6 @@ consistency_funclist = [["类别一致性", trig_class_consistency, class_consis
                         ["非线性相关一致性", trig_spearman_consistency, spearman_consistency],
                         ["目标一致性", trig_goals_consistency, goals_consistency],
                         ["ASR一致性", trig_audio_text_consistancy, ASR_consistancy],
-                        ["文本同样本标注长度一致性", trig_length_annotation_consistency, length_annotation_consistancy]]
+                        ["文本同样本标注长度一致性", trig_length_annotation_consistency,
+                            length_annotation_consistancy],
+                        ["文本同样本标注语义一致性", trig_semantic_annotation_consistancy, semantic_annotation_consistancy]]
