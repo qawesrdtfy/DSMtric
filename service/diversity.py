@@ -4,6 +4,8 @@ from collections import Counter
 import librosa
 from sklearn.metrics import pairwise_distances
 import math
+import numpy as np
+import pandas as pd
 
 def trig_class_diversity(data:Data) -> bool:
     """
@@ -319,6 +321,36 @@ def audio_content_diversity(data:Data):
     score = np.mean(dist_matrix).item()
     return round(score,3)
 
+def trig_structure_discrete_diversity(column:list) -> bool:
+    """
+    结构化数据离散值多样性
+    :column: 结构化数据的特定列
+    :return: 通过判断特定列中的数据是否连续来判断是否触发，bool
+    """
+    # 对数据进行排序
+    arr = np.sort(column.values)
+    # 计算差值
+    diffs = np.diff(arr)
+    # 检查所有差值是否都等于1
+    result = (diffs == 1).all()
+    return not result
+def structure_discrete_diversity(column:list):
+    """
+    结构化数据离散值多样性
+    :column: 结构化数据的特定列
+    :return: 列数据的熵值，0~log(n)，n是取值数量，越接近大表明多样性越高
+    """
+    data = {'Column':column}
+    df = pd.DataFrame(data)
+    # 计算每种取值的频率
+    value_counts = df['Column'].value_counts(normalize=True)
+    # 计算熵值
+    entropy = 0
+    for value in value_counts:
+        probability = value
+        entropy -= probability * math.log2(probability)
+    return entropy
+
 # 函数列表，元素为[指标名，触发函数，计算函数]
 diversity_funclist=[["类别多样性",trig_class_diversity,class_diversity],
                     ["主题多样性",trig_topic_diversity,topic_diversity],
@@ -330,5 +362,6 @@ diversity_funclist=[["类别多样性",trig_class_diversity,class_diversity],
                     ["词汇丰富度", trig_vocabulary_richness, vocabulary_richness],
                     ["颜色多样性",trig_color_diversity,color_diversity],
                     ["视觉特征多样性",trig_visual_feature_diversity,visual_feature_diversity],
-                    ["音频内容多样性",trig_audio_content_diversity,audio_content_diversity]
+                    ["音频内容多样性",trig_audio_content_diversity,audio_content_diversity],
+                    ["结构化数据离散值多样性",trig_structure_discrete_diversity,structure_discrete_diversity]
                     ]
