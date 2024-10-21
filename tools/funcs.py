@@ -5,7 +5,9 @@ from collections import Counter
 from scipy.stats import entropy
 import cv2
 from skimage.feature import graycomatrix, graycoprops
-def zoom(x,min,max) -> float:
+
+
+def zoom(x, min, max) -> float:
     """
     将取值放缩到0～1之间
     x: 原取值
@@ -14,44 +16,47 @@ def zoom(x,min,max) -> float:
 
     return: 放缩后的值，0~1
     """
-    if abs(max-min)<1e-6:
+    if abs(max-min) < 1e-6:
         return 0
-    max-=min
-    x-=min
-    min-=min
-    return x/max
+    max -= min
+    x -= min
+    min -= min
+    return round(x/max, 4)
 
-def shannon_entropy(probs:list) -> float:
+
+def shannon_entropy(probs: list) -> float:
     """
     计算香农熵。
     probs: 每种取值的概率列表，元素范围(0,1]
-    
+
     return: 香农熵的值，范围(0,log(n)]
     """
-    count=0
+    count = 0
     entropy = 0
     for p in probs:
         if p > 0:  # 因为0的对数是未定义的
             entropy -= p * math.log2(p)
-            count+=1
-    return entropy,(0,math.log2(count))
+            count += 1
+    return entropy, (0, math.log2(count))
 
-def spread_probs(labels:list) -> list:
+
+def spread_probs(labels: list) -> list:
     """
     计算每种取值的概率
     labels: 每个样本的取值
-    
+
     return: 每种取值的概率列表（无序），元素范围(0,1]
     """
-    length=len(labels)
-    speads={}
+    length = len(labels)
+    speads = {}
     for label in labels:
-        speads[label]=speads.get(label,0)+1
-    for k,v in speads.items():
-        speads[k]=v/length
+        speads[label] = speads.get(label, 0)+1
+    for k, v in speads.items():
+        speads[k] = v/length
     return list(speads.values())
 
-def image_binary(matrix:np.ndarray) -> np.ndarray:
+
+def image_binary(matrix: np.ndarray) -> np.ndarray:
     """
     将图像转换为二值矩阵
     matrix：图像矩阵
@@ -69,14 +74,16 @@ def image_binary(matrix:np.ndarray) -> np.ndarray:
     binary_image = (image_gray > 127).astype(np.uint8)
     return binary_image
 
+
 def calculate_ttr(tokens) -> float:
     """
     计算单个片段的Type-Token Ratio(TTR)
     tokens：文本词汇列表
     return：返回的TTR值
     """
-    types=set(tokens)
-    return  len(types)/len(tokens)
+    types = set(tokens)
+    return len(types)/len(tokens)
+
 
 def batch_segment(texts, batch_size=500):
     """
@@ -98,6 +105,8 @@ def batch_segment(texts, batch_size=500):
     # 处理最后一个批次
     if batch_tokens:
         yield batch_tokens
+
+
 def compute_gini(frequencies):
     """
     计算基尼系数
@@ -115,7 +124,8 @@ def compute_gini(frequencies):
 
     return gini_index
 
-def quantize_colors(image,bins=16):
+
+def quantize_colors(image, bins=16):
     """
     量化颜色，把原来复杂的颜色空间量化到指定的bins区间，减少颜色数量
     image: 图像的RGB矩阵
@@ -152,10 +162,10 @@ def compute_image_entropy(color_counter):
     total_pixels = sum(color_counter.values())
     # 计算每种颜色出现的概率
     probabilities = np.array(list(color_counter.values())) / total_pixels
-    return entropy(probabilities,base=2)
+    return entropy(probabilities, base=2)
 
 
-def extract_color_histogram(image,n_bins):
+def extract_color_histogram(image, n_bins):
     """
     提取颜色直方图作为颜色特征
     image: 图像的RGB矩阵
@@ -179,6 +189,8 @@ def extract_shape_features(image):
     return np.sum(edges)
 
 #
+
+
 def extract_texture_features(image):
     """
     提取灰度共生矩阵 (GLCM) 的纹理特征
@@ -188,7 +200,7 @@ def extract_texture_features(image):
     """
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     glcm = graycomatrix(gray, distances=[1], angles=[0], levels=256, symmetric=True, normed=True)
-    contrast = graycoprops(glcm, 'contrast')[0, 0] #值越高，图像对比度越明显  取值 0-无穷
-    dissimilarity = graycoprops(glcm, 'dissimilarity')[0, 0] #值越高，图像中相邻像素的灰度差异越大
-    homogeneity = graycoprops(glcm, 'homogeneity')[0, 0] #值越高，图像中相邻像素的灰度值越相似。
+    contrast = graycoprops(glcm, 'contrast')[0, 0]  # 值越高，图像对比度越明显  取值 0-无穷
+    dissimilarity = graycoprops(glcm, 'dissimilarity')[0, 0]  # 值越高，图像中相邻像素的灰度差异越大
+    homogeneity = graycoprops(glcm, 'homogeneity')[0, 0]  # 值越高，图像中相邻像素的灰度值越相似。
     return contrast, dissimilarity, homogeneity
