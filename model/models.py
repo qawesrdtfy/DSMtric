@@ -6,3 +6,4 @@ from .AudioEncoder import AudioEncoder
 from .ASRModel import ASR
 from .LLMModel import LoadLLM
 from .MacBertModel import MBert
+from .InceptionModel import InceptionModelV3

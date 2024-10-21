@@ -4,8 +4,8 @@ from collections import Counter
 import librosa
 from sklearn.metrics import pairwise_distances
 import math
-import numpy as np
-import pandas as pd
+from PIL import Image
+from tools.askmodel import *
 
 def trig_class_diversity(data:Data) -> bool:
     """
@@ -47,6 +47,35 @@ def topic_diversity(data:Data):
     score,therange=shannon_entropy(probs)
     score=zoom(score,therange[0],therange[1])
     return score
+
+def trig_inception_score(data:Data) -> bool:
+    """
+    IS指数的触发函数
+    :param X_modal: X的模态
+    :return: 是否触发，bool
+    """
+    if data.X_modal == ["图像"]:
+        return True
+def inception_score(data:Data):
+    """
+    IS指数
+    :param X: 每个样本的主题
+    :return: IS指数，范围0～1
+    """
+    image_path=data.X['图像地址']
+    images = [Image.open(image_path) for image_path in image_path]
+    preds = ask_Inception(images)
+    splits=10
+    # 计算每个split的得分
+    split_scores = []
+    for k in range(splits):
+        part = preds[k * (len(preds) // splits): (k + 1) * (len(preds) // splits), :]
+        p_y = np.mean(part, axis=0)  # 计算p(y)
+
+        kl_divs = [entropy(p_yx, p_y) for p_yx in part]
+        split_scores.append(np.exp(np.mean(kl_divs)))
+
+    return np.mean(split_scores), np.std(split_scores)
 
 def trig_picShape_diversity(data:Data) -> bool:
     """
@@ -321,39 +350,10 @@ def audio_content_diversity(data:Data):
     score = np.mean(dist_matrix).item()
     return round(score,3)
 
-def trig_structure_discrete_diversity(column:list) -> bool:
-    """
-    结构化数据离散值多样性
-    :column: 结构化数据的特定列
-    :return: 通过判断特定列中的数据是否连续来判断是否触发，bool
-    """
-    # 对数据进行排序
-    arr = np.sort(column.values)
-    # 计算差值
-    diffs = np.diff(arr)
-    # 检查所有差值是否都等于1
-    result = (diffs == 1).all()
-    return not result
-def structure_discrete_diversity(column:list):
-    """
-    结构化数据离散值多样性
-    :column: 结构化数据的特定列
-    :return: 列数据的熵值，0~log(n)，n是取值数量，越接近大表明多样性越高
-    """
-    data = {'Column':column}
-    df = pd.DataFrame(data)
-    # 计算每种取值的频率
-    value_counts = df['Column'].value_counts(normalize=True)
-    # 计算熵值
-    entropy = 0
-    for value in value_counts:
-        probability = value
-        entropy -= probability * math.log2(probability)
-    return entropy
-
 # 函数列表，元素为[指标名，触发函数，计算函数]
 diversity_funclist=[["类别多样性",trig_class_diversity,class_diversity],
                     ["主题多样性",trig_topic_diversity,topic_diversity],
+                    ["IS指数",trig_inception_score,inception_score],
                     ["图像尺寸和比例多样性",trig_picShape_diversity,picShape_diversity],
                     ["视频长度和尺寸比例多样性",trig_videoLength_diversity,videoLength_diversity],
                     ["音频长度多样性",trig_audioLength_diversity,audioLength_diversity],
@@ -362,6 +362,5 @@ diversity_funclist=[["类别多样性",trig_class_diversity,class_diversity],
                     ["词汇丰富度", trig_vocabulary_richness, vocabulary_richness],
                     ["颜色多样性",trig_color_diversity,color_diversity],
                     ["视觉特征多样性",trig_visual_feature_diversity,visual_feature_diversity],
-                    ["音频内容多样性",trig_audio_content_diversity,audio_content_diversity],
-                    ["结构化数据离散值多样性",trig_structure_discrete_diversity,structure_discrete_diversity]
+                    ["音频内容多样性",trig_audio_content_diversity,audio_content_diversity]
                     ]

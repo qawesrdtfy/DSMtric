@@ -62,3 +62,8 @@ def ask_MBert(text:list):
     r=requests.post('http://0.0.0.0:48812/WrongSpelling',json={"text":text})
     r=r.json()['resultinfo']
     return r
+
+def ask_Inception(images:list):
+    r = requests.post('http://0.0.0.0:48812/WrongSpelling', json={"images": images})
+    r = r.json()['resultinfo']
+    return r
