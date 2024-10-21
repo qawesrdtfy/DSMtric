@@ -86,7 +86,8 @@ def CLIPmodel():
         data = json.loads(request.get_data(as_text=True))
         pic_paths = data['pic_paths']
         text = data['text']
-        sim = [CLIPmode.calculate_similarity(item,text[i]) for i,item in enumerate(pic_paths)]
+        # sim = [CLIPmode.calculate_similarity(item,text[i]) for i,item in enumerate(pic_paths)]
+        sim = CLIPmode.calculate_similarity(pic_paths,text)
         formResult = {"resultinfo":sim}
         print('Normal Reponse:',"图文向量相似度接口调用成功")
         return jsonify(formResult)

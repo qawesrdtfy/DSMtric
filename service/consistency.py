@@ -435,7 +435,7 @@ def spearman_consistency(data: Data):
 
 def trig_audio_text_consistancy(data: Data):
     '''
-    图文内容一致性的触发函数  --图像转文本模型，rougel相似度
+    音文内容一致性的触发函数  --音频转文本模型，BLEU相似度
     :X_modal
     :Y_modal
     :return:bool
@@ -580,6 +580,7 @@ consistency_funclist = [["类别一致性", trig_class_consistency, class_consis
                             audiofeature_consistency],
                         ["图文内容一致性", trig_image_text_consistancy,
                             image_text_consistancy],
+                        ["图文向量一致性", trig_image_text_consistancy, image_text_vec_consistancy],
                         ["视觉一致性", trig_visual_consistency, visual_consistency],
                         ["线性相关一致性", trig_person_consistency, person_consistency],
                         ["非线性相关一致性", trig_spearman_consistency, spearman_consistency],
