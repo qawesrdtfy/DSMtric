@@ -20,7 +20,7 @@ def discrimination_normative(data: Data):
     res = ask_Discrimination(text)
     cnt = 0
     for it in res:
-        if it == 'Yes':
+        if it == 'No':
             cnt += 1
     return round(cnt/len(text), 4)
 
@@ -34,7 +34,7 @@ def LogicalLegality_normative(data: Data):
     res = ask_LogicalLegality(text)
     cnt = 0
     for it in res:
-        if it == 'Yes':
+        if it == 'No':
             cnt += 1
     return round(cnt/len(text), 4)
 
@@ -64,7 +64,7 @@ def Guideline(data: Data):
     # lzy快把这里补全啊！ 在补了在补了！！
     cntyes = 0
     for item in res:
-        if item == 'yes':
+        if item == 'Yes':
             cntyes += 1
     return round(cntyes/len(res), 4)
 
