@@ -41,6 +41,11 @@ if config['MacBert']:
 else:
     SpellingCheck = None
 
+if config['Inception']:
+    Inception = InceptionModelV3('cuda')
+else:
+    Inception = None
+
 
 @app.route("/doc_encode",methods=['post','get'])
 def doc_encode():
@@ -160,6 +165,18 @@ def WrongSpelling():
         print('Normal Reponse:',"中文错别字识别接口调用成功")
         return jsonify(formResult)
     return 'connection ok!'
+
+@app.route("/inceptionModel",methods=['post','get'])
+def inceptionModel():
+    if request.method == "POST":
+        data = json.loads(request.get_data(as_text=True))
+        images = data['images']
+        response =Inception.predict(images)
+        formResult = {"resultinfo":response}
+        print('Normal Reponse:',"Inception模型接口调用成功")
+        return jsonify(formResult)
+    return 'connection ok!'
+
 
 if __name__ == '__main__':
     app.config['JSON_AS_ASCII']=False
