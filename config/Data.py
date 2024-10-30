@@ -64,7 +64,7 @@ class Data:
             Y_per_annotater[modal] = Y_per_modal
         for modal in ['图像']:
             if modal in self.Y_modal:
-                Y_per_modal = [[os.path.join(Yp_dir, modal, file) for file in os.listdir(os.path.join(Yp_dir, modal))]
+                Y_per_modal = [sorted([os.path.join(Yp_dir, modal, file) for file in os.listdir(os.path.join(Yp_dir, modal))])
                                for Yp_dir in Yp_dirs]  # 标注员数，样本数
                 Y_per_modal = list(zip(*Y_per_modal))  # 样本数，标注员数
                 Y_per_annotater[modal+'地址'] = Y_per_modal
