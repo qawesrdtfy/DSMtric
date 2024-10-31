@@ -170,8 +170,8 @@ def WrongSpelling():
 def inceptionModel():
     if request.method == "POST":
         data = json.loads(request.get_data(as_text=True))
-        images = data['images']
-        response =Inception.predict(images)
+        pic_paths = data['pic_paths']
+        response =Inception.predict(pic_paths)
         formResult = {"resultinfo":response}
         print('Normal Reponse:',"Inception模型接口调用成功")
         return jsonify(formResult)

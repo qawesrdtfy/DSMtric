@@ -21,28 +21,29 @@ class InceptionModelV3:
         """对输入的图片进行预处理"""
         return self.preprocess(image).unsqueeze(0)
 
-    def predict(self, images):
+    def predict(self, pic_paths):
         """
         对输入的图片列表进行预测
         :param images: PIL Image列表
         :return: 预测结果（概率分布）
         """
+        images = [Image.open(pic_path) for pic_path in pic_paths]
         preds = []
         for img in images:
             input_tensor = self.preprocess_image(img)
             with torch.no_grad():
                 pred = self.model(input_tensor)
                 preds.append(torch.nn.functional.softmax(pred, dim=1).cpu().numpy())
-        return np.concatenate(preds, axis=0)
+        return np.concatenate(preds, axis=0).tolist()
 if __name__ == "__main__":
     image_paths = ["testdata/image/image1.jpg", "testdata/image/image2.jpg"]  # 替换为实际的图片路径
-    images = [Image.open(image_path) for image_path in image_paths]
+    
 
     # 创建InceptionModel对象
-    model = InceptionModelV3()
+    model = InceptionModelV3('cuda')
 
     # 获取预测结果
-    predictions = model.predict(images)
+    predictions = model.predict(image_paths)
 
     # 打印预测结果
     print("Predictions:")
