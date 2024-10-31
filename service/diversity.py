@@ -6,6 +6,7 @@ from sklearn.metrics import pairwise_distances
 import math
 from PIL import Image
 from tools.askmodel import *
+import numpy
 
 def trig_class_diversity(data:Data) -> bool:
     """
@@ -60,12 +61,17 @@ def inception_score(data:Data):
     """
     IS指数
     :param X: 每个样本的主题
-    :return: IS指数，范围0～1
+    :return: IS指数，范围1-【+无穷】  函数有一个变量  splits 需要保证 splits<图像个数n
     """
     image_path=data.X['图像地址']
-    images = [Image.open(image_path) for image_path in image_path]
-    preds = ask_Inception(images)
-    splits=10
+    preds = ask_Inception(image_path)
+    preds=numpy.array(preds)
+    print(preds.shape)
+    splits=1
+    n = preds.shape[0]
+    if splits > n:
+        print(f"Warning: splits ({splits}) is greater than number of images ({n}). Setting splits to {n}.")
+        splits = n
     # 计算每个split的得分
     split_scores = []
     for k in range(splits):
@@ -74,8 +80,9 @@ def inception_score(data:Data):
 
         kl_divs = [entropy(p_yx, p_y) for p_yx in part]
         split_scores.append(np.exp(np.mean(kl_divs)))
-
-    return np.mean(split_scores), np.std(split_scores)
+    score=np.mean(split_scores)
+    score=1 / (1 + np.exp(-score))
+    return round(score,3)
 
 def trig_picShape_diversity(data:Data) -> bool:
     """
@@ -181,10 +188,12 @@ def length_diversity(data:Data):
     """
     texts=data.X['文本']
     lengths = [len(text) for text in texts]
-    mean_length = np.mean(lengths)
-    std_length = np.std(lengths)
-    score = std_length / mean_length
-    return score
+    length_counts = np.bincount(lengths)  
+    prob_dist = length_counts / len(lengths) 
+    prob_dist = prob_dist[prob_dist > 0]
+    lengths_entropy = entropy(prob_dist, base=2)
+    score=zoom(lengths_entropy,0,math.log2(len(lengths)))
+    return round(score,3)
 
 def trig_vocabulary_diversity(data:Data) -> bool:
     """
@@ -214,9 +223,10 @@ def vocabulary_diversity(data:Data):
         ttr_values = [calculate_ttr(segment) for segment in segments]
         total_ttr_values.extend(ttr_values)
         total_segments += len(ttr_values)
-
+    score=sum(total_ttr_values) / total_segments if total_segments > 0 else 0
+    
     # 计算并返回 STTR
-    return sum(total_ttr_values) / total_segments if total_segments > 0 else 0
+    return round(score,3)
 
 
 def trig_vocabulary_richness(data:Data) ->bool:
@@ -233,19 +243,27 @@ def vocabulary_richness(data:Data):
     """
     计算文本的基尼系数 其思想是将词频分布类比为收入分布，于是可以计算基尼系数
     :param X: 每个样本的文本
-    :return: 数据集的基尼系数  取值范围0-1  越接近0表示越均衡
+    :return: 数据集的基尼系数  取值范围0-1  越接近1表示越均衡 (原系数是越接近1越均衡，使用1-进行返回变化)
     """
     texts=data.X['文本']
     global_word_counts = Counter()
+    stop_words = set(["的", "了", "是", "在", "和", "有", "为", "等",
+    '.', ',', '!', '?', ';', ':', "'", '"', '“', '”', '‘', '’', '【', '】',
+    '(', ')', '{', '}', '<', '>', '《', '》', '[', ']', '-', '–', '—', '_', 
+    '~', '`', '@', '#', '$', '%', '^', '&', '*', '+', '=', '|', '\\', '/', 
+    '、', '。', '，', '；', '：', '·',' '])
+
     # 对每个文本分别进行分词并统计词频
     for text in texts:
         words = jieba.cut(text)
-        word_counts = Counter(words)
+        # 过滤掉停用词和长度小于等于1的词
+        filtered_words = [word for word in words if word not in stop_words]
+        word_counts = Counter(filtered_words)
         global_word_counts.update(word_counts)
-    # Step 2: 计算全局基尼系数
+    print(global_word_counts)
     frequencies = np.array(list(global_word_counts.values()))
-    score = compute_gini(frequencies)
-    return score
+    score = 1-compute_gini(frequencies)
+    return round(score,3)
 
 
 def trig_color_diversity(data:Data) -> bool:
@@ -272,7 +290,7 @@ def color_diversity(data:Data):
         image_entropy = entropy(color_hist)
         total_entropy += image_entropy
         score=zoom(total_entropy / len(images),0,math.log2(n_bins*n_bins*n_bins))
-    return score
+    return round(score,3)
 
 def trig_visual_feature_diversity(data:Data):
     """
@@ -290,6 +308,7 @@ def visual_feature_diversity(data:Data):
     :param X: 每个样本，要求是视频
     :return: 熵值，取值范围为0-log(n)  n是数据集所选取的视频帧总和
     """
+    
     samples_frame=data.X["视频"]
     frame_interval=30  #视频提取间隔帧数 需要设置的指标
     #用于整体计算多个视频的整体指标
@@ -304,7 +323,7 @@ def visual_feature_diversity(data:Data):
         for frame_count, frame in enumerate(sample_frame):
             if frame_count % frame_interval == 0:
                 count=count+1
-                color_hist = extract_color_histogram(frame)
+                color_hist = extract_color_histogram(frame,8)
                 shape_feat = extract_shape_features(frame)
                 texture_feat = extract_texture_features(frame)
                 color_features.append(color_hist)
@@ -322,7 +341,8 @@ def visual_feature_diversity(data:Data):
                             ])
 
     score = np.mean([color_diversity, shape_diversity, texture_diversity])
-    return score
+    score=zoom(score,0,math.log2(count))
+    return round(score,3)
 
 def trig_audio_content_diversity(data:Data) -> bool:
     """
@@ -337,7 +357,7 @@ def audio_content_diversity(data:Data):
     """
     音频内容多样性
     :param X: 每个样本，要求是音频
-    :return: MFCC特征的余弦距离矩阵，取值范围为[0-2]  越高表示多样性越高
+    :return: MFCC特征的余弦距离矩阵，取值范围为[0-1]  越高表示多样性越高
     """
     audio_samples=data.X['音频']
     audio_samples_file=data.X['音频地址']
@@ -347,7 +367,7 @@ def audio_content_diversity(data:Data):
         mfcc = librosa.feature.mfcc(y=audio_sample, sr=sr)
         features.append((mfcc.mean(axis=1)))
     dist_matrix = pairwise_distances(features, metric='cosine')
-    score = np.mean(dist_matrix).item()
+    score = np.mean(dist_matrix).item()  #单独一个样本  取0
     return round(score,3)
 
 # 函数列表，元素为[指标名，触发函数，计算函数]

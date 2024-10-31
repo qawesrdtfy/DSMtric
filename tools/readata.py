@@ -30,6 +30,10 @@ def read_audio(path): #  -> list[np.ndarray]
     return samples
 
 def read_video(path): #  -> list[np.ndarray]
+    import numpy
+    numpy.float = numpy.float64
+    numpy.int = numpy.int_
+    import skvideo.io   
     files=[os.path.join(path,one) for one in os.listdir(path)]
     samples=[skvideo.io.vread(file) for file in files]
     return samples

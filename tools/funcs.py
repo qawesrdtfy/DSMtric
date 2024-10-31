@@ -94,8 +94,14 @@ def batch_segment(texts, batch_size=500):
     return: 生成器，逐批返回分词结果
     """
     batch_tokens = []
+    stop_words = set(["的", "了", "是", "在", "和", "有", "为", "等",
+    '.', ',', '!', '?', ';', ':', "'", '"', '“', '”', '‘', '’', '【', '】',
+    '(', ')', '{', '}', '<', '>', '《', '》', '[', ']', '-', '–', '—', '_', 
+    '~', '`', '@', '#', '$', '%', '^', '&', '*', '+', '=', '|', '\\', '/', 
+    '、', '。', '，', '；', '：', '·',' ']) #用于排除常见标点符号
     for i, text in enumerate(texts):
         tokens = list(jieba.cut(text))
+        tokens = [word for word in tokens if word not in stop_words]
         batch_tokens.extend(tokens)
 
         if (i + 1) % batch_size == 0:
@@ -116,12 +122,12 @@ def compute_gini(frequencies):
     """
     # 将词频按升序排列
     frequencies = np.sort(frequencies)
-    n = len(frequencies)
-    # 计算累积频率的比例
-    cumulative_freqs = np.cumsum(frequencies) / sum(frequencies)
+    n=len(frequencies)
+    cumulative_freqs=[sum(frequencies[:i+1]) for i in range(n)]
+    total_frequencies=sum(frequencies)
     # 计算基尼系数
-    gini_index = 1 - 2 * np.sum(cumulative_freqs) / n
-
+    #gini_index =(n+1-2*sum((i+1)*cumulative_freqs[i] for i in range(n))/total_frequencies)/n、
+    gini_index = (2 * np.sum((np.arange(1, n+1) * frequencies)) / (n * np.sum(frequencies))) - (n + 1) / n
     return gini_index
 
 
