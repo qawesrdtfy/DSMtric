@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from statsmodels.stats.inter_rater import fleiss_kappa
 from rouge_chinese import Rouge
@@ -108,6 +109,7 @@ def audiocontent_consistency(data: Data):
     音频内容一致性
     :param Y_per_annotater: 每个样本每个标注员的标注结果
     :return: 内容一致性得分，范围0～1
+    这个函数运行的很慢！严重拖慢了音频模态相关的指标计算过程。
     """
     all_scores = []
     for sample in data.Y_per_annotater['音频']:
