@@ -20,7 +20,7 @@ class Data:
         # Y的模态：类别、文本、图像、音频、视频、语音、图像目标
         self.Y_modal = data.get('Y_modal', [])
         # 标注规则
-        self.rule = data.get('rule', '')
+        self.rule = self._get_rule(dataset_dir)
         # 每个样本的主题
         self.X_topic = self._get_X_topic(dataset_dir)
         # 每个样本每个标注员的标注结果
@@ -77,3 +77,11 @@ class Data:
         with open(X_topic_file, 'r', encoding='utf-8') as f:
             topics = [one.strip('\n') for one in f.readlines()]
         return topics
+
+    def _get_rule(self, dataset_dir):
+        rule_file = os.path.join(dataset_dir, 'rule.txt')
+        if not os.path.exists(rule_file):
+            return ''
+        with open(rule_file, 'r', encoding='utf-8') as f:
+            rule = ' '.join([one for one in f.readlines()])
+        return rule
