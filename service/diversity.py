@@ -7,12 +7,13 @@ import math
 from PIL import Image
 from tools.askmodel import *
 import numpy
+import pandas as pd
 
 def trig_class_diversity(data:Data) -> bool:
     """
     类别多样性的触发函数
     :param Y_modal: Y的模态
-    :return: 是否触发，bool
+    :return: 是否触发，bools
     """
     if data.Y_modal==['类别']:
         return True
