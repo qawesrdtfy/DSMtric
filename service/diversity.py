@@ -371,35 +371,46 @@ def audio_content_diversity(data:Data):
     score = np.mean(dist_matrix).item()  #单独一个样本  取0
     return round(score,3)
 
-def trig_structure_discrete_diversity(column:list) -> bool:
+def trig_structure_discrete_diversity(data:Data) -> bool:
     """
     结构化数据离散值多样性
-    :column: 结构化数据的特定列
+    :data: 结构化数据
     :return: 通过判断特定列中的数据是否连续来判断是否触发，bool
     """
-    # 对数据进行排序
-    arr = np.sort(column.values)
-    # 计算差值
-    diffs = np.diff(arr)
-    # 检查所有差值是否都等于1
-    result = (diffs == 1).all()
-    return not result
-def structure_discrete_diversity(column:list):
+    if data.X_modal != ["结构化数据"]:
+        return False
+
+    # 遍历每一列的数据
+    for col_index in range(len(data.X[0])):
+        # 对数据进行排序并判断差值是否都是1
+        arr = np.sort(data.X[:][col_index])
+        diffs = np.diff(arr)
+        result = result = (diffs == 1).all()
+        if result == False:
+            return True
+    return False
+
+def structure_discrete_diversity(data:Data):
     """
     结构化数据离散值多样性
-    :column: 结构化数据的特定列
-    :return: 列数据的熵值，0~log(n)，n是取值数量，越接近大表明多样性越高
+    :data: 结构化数据
+    :return: 每列数据的平均熵值，0~log(n)，n是取值数量，越接近大表明多样性越高
     """
-    data = {'Column':column}
-    df = pd.DataFrame(data)
-    # 计算每种取值的频率
-    value_counts = df['Column'].value_counts(normalize=True)
-    # 计算熵值
-    entropy = 0
-    for value in value_counts:
-        probability = value
-        entropy -= probability * math.log2(probability)
-    return entropy
+    entropys = []
+    for col_index in range(len(data.x[0])):
+        column = {'Column':data[:][col_index]}
+        df = pd.DataFrame(column)
+        # 计算每种取值的频率
+        value_counts = df['Column'].value_counts(normalize=True)
+        # 计算熵值
+        entropy = 0
+        for value in value_counts:
+            probability = value
+            entropy -= probability * math.log2(probability)
+        entropys.append(entropy)
+    
+    result = sum(entropys) / len(entropys)
+    return result
 
 # 函数列表，元素为[指标名，触发函数，计算函数]
 diversity_funclist=[["类别多样性",trig_class_diversity,class_diversity],
