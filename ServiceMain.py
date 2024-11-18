@@ -34,8 +34,9 @@ def compute(data,cons_trigged,divers_trigged,norma_trigged):
 
 def main(args):
     print('确定目录')
-    dataset_dir=f'data/dataset/{args.username}-{args.datasetname}'
-    result_dir=f'data/result/{args.username}-{args.datasetname}'
+    # 去除username
+    dataset_dir=f'data/dataset/{args.datasetname}'
+    result_dir=f'data/result/{args.datasetname}'
     print('合并数据集和元数据')
     data=json.loads(args.metadata)
     data=Data(data, dataset_dir)
@@ -57,22 +58,22 @@ def main(args):
     final_score=round(sum(three_scores)/len(three_scores),4) if len(three_scores)!=0 else -1
     # 保存结果和完成标识
     result={
-        "总分":final_score,
-        "一致性得分":cons_score,
-        "多样性得分":divers_score,
-        "规范性得分":norma_score
+        "总分":"{:.4f}".format(final_score),
+        "一致性得分":"{:.4f}".format(cons_score),
+        "多样性得分":"{:.4f}".format(divers_score),
+        "规范性得分":"{:.4f}".format(norma_score)
     }
     for i,item in enumerate(consistency_funclist):
         if cons_trigged[i]:
-            result[item[0]]=cons_scores[i]
+            result[item[0]]="{:.4f}".format(cons_scores[i])
     for i,item in enumerate(diversity_funclist):
         if divers_trigged[i]:
-            result[item[0]]=divers_scores[i]
+            result[item[0]]="{:.4f}".format(divers_scores[i])
     for i,item in enumerate(normative_funclist):
         if norma_trigged[i]:
-            result[item[0]]=norma_scores[i]
+            result[item[0]]="{:.4f}".format(norma_scores[i])
     json.dump(result,open(result_dir+'/result.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
-    print(f'{args.username}的“{args.datasetname}”数据集评测完成')
+    print(f'“{args.datasetname}”数据集评测完成')
 
 
 if __name__ == "__main__":
@@ -80,7 +81,8 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # Path options.
-    parser.add_argument("--username", type=str)
+    # 去除username
+    # parser.add_argument("--username", type=str)
     parser.add_argument("--datasetname", type=str)
     parser.add_argument("--metadata", type=str)
     args = parser.parse_args()

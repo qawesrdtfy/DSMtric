@@ -8,13 +8,12 @@ import traceback
 # 后端服务启动
 app = Flask(__name__)
 
-def deal_dir(username,datasetname,mode):
+def deal_dir(datasetname,mode):
     """0建立1删除2检查是否存在"""
-    dataset_dir=f'data/dataset/{username}-{datasetname}'
-    result_dir=f'data/result/{username}-{datasetname}'
+    dataset_dir=f'data/dataset/{datasetname}'
+    result_dir=f'data/result/{datasetname}'
     if mode==0:
-        os.makedirs(dataset_dir,exist_ok=False)
-        os.makedirs(result_dir,exist_ok=False)
+        os.makedirs(result_dir,exist_ok=True)
     elif mode==1:
         shutil.rmtree(dataset_dir)
         shutil.rmtree(result_dir)
@@ -30,37 +29,26 @@ def metric():
     if request.method == "POST":
         # 解析参数
         try:
-            username = request.form.get("id")
-            datasetname = request.form.get("name")
+            datasetname = request.form.get("datasetname")
             metadata = request.form.get("metadata")
             json.loads(metadata)
-            dataset = request.files['dataset']
         except Exception as e:
-            formResult = {"resultinfo":f'{username}的“{datasetname}”数据集评测启动失败，参数解析失败！{e}'}
+            formResult = {"resultinfo":f'“{datasetname}”数据集评测启动失败，参数解析失败！{e}'}
             print('Abnormal Reponse:',formResult)
             traceback.print_exc()
             return jsonify(formResult)
+        
+        if os.path.exists(f'data/dataset/{datasetname}') == False:
+            formResult = {"resultinfo":f'“{datasetname}”数据集评测启动失败，数据集不存在！'}
+            print('Abnormal Reponse:',formResult)
+            traceback.print_exc()
+            return jsonify(formResult)
+        
         # 构建专属空间
         try:
-            dataset_dir,result_dir,_=deal_dir(username,datasetname,mode=0)
+            dataset_dir,result_dir,_=deal_dir(datasetname,mode=0)
         except Exception as e:
-            formResult = {"resultinfo":f'{username}的“{datasetname}”数据集评测启动失败，存储空间构建失败！{e}'}
-            print('Abnormal Reponse:',formResult)
-            traceback.print_exc()
-            return jsonify(formResult)
-        # 存储并解压数据集
-        try:
-            # 貌似图像等会是好多个文件，所以需要人家发来个压缩包，然后咱保存了之后要解压
-            # 要求解压后产生文件夹X和Y，X和Y内是模态为名的文件夹
-            with open(f'{dataset_dir}/data.tar.gz', 'wb') as file:
-                file.writelines(dataset.readlines())
-            command = ["tar", "-xvf", f'data.tar.gz']
-            process = subprocess.Popen(command, cwd=dataset_dir)
-            # process = subprocess.Popen(command, stdout=file, stderr=file, cwd='.')
-            process.wait()
-        except Exception as e:
-            deal_dir(username,datasetname,mode=1)
-            formResult = {"resultinfo":f'{username}的“{datasetname}”数据集评测启动失败，数据集读取或存储失败！{e}'}
+            formResult = {"resultinfo":f'“{datasetname}”数据集评测启动失败，存储空间构建失败！{e}'}
             print('Abnormal Reponse:',formResult)
             traceback.print_exc()
             return jsonify(formResult)
@@ -69,18 +57,17 @@ def metric():
             with open(f'{result_dir}/metric.log', 'w') as file:
                 # 创建子进程，将输出重定向到文件
                 command = ["python", "ServiceMain.py", 
-                        "--username", username,
                         "--metadata", metadata,
                         "--datasetname", datasetname]
                 process = subprocess.Popen(command, stdout=file, stderr=file, cwd='.')
         except Exception as e:
-            deal_dir(username,datasetname,mode=1)
-            formResult = {"resultinfo":f'{username}的“{datasetname}”数据集评测启动失败，评测程序启动失败！{e}'}
+            deal_dir(datasetname,mode=1)
+            formResult = {"resultinfo":f'“{datasetname}”数据集评测启动失败，评测程序启动失败！{e}'}
             print('Abnormal Reponse:',formResult)
             traceback.print_exc()
             return jsonify(formResult)
 
-        formResult = {"resultinfo":f'{username}的“{datasetname}”数据集评测开始！'}
+        formResult = {"resultinfo":f'“{datasetname}”数据集评测开始！'}
         print('Normal Reponse:',formResult)
         return jsonify(formResult)
 
@@ -118,3 +105,4 @@ if __name__ == '__main__':
     app.config['JSON_AS_ASCII']=False
     app.run(host='0.0.0.0',port=48811)
     print("GoodBye")
+# curl -X POST -F "datasetname=data-文本文本" -F "metadata={\"X_modal\": [\"文本\"], \"Y_modal\": [\"文本\"]}" http://127.0.0.1:48811/api/metric
