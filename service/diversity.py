@@ -58,6 +58,8 @@ def trig_inception_score(data:Data) -> bool:
     """
     if data.X_modal == ["图像"]:
         return True
+    return False
+
 def inception_score(data:Data):
     """
     IS指数

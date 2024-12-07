@@ -33,13 +33,13 @@ def metric():
             metadata = request.form.get("metadata")
             json.loads(metadata)
         except Exception as e:
-            formResult = {"resultinfo":f'“{datasetname}”数据集评测启动失败，参数解析失败！{e}'}
+            formResult = {"resultinfo":f'“{datasetname}”数据集评测启动失败，参数解析失败！{e}',"status":2}
             print('Abnormal Reponse:',formResult)
             traceback.print_exc()
             return jsonify(formResult)
         
         if os.path.exists(f'data/dataset/{datasetname}') == False:
-            formResult = {"resultinfo":f'“{datasetname}”数据集评测启动失败，数据集不存在！'}
+            formResult = {"resultinfo":f'“{datasetname}”数据集评测启动失败，数据集不存在！',"status":2}
             print('Abnormal Reponse:',formResult)
             traceback.print_exc()
             return jsonify(formResult)
@@ -48,7 +48,7 @@ def metric():
         try:
             dataset_dir,result_dir,_=deal_dir(datasetname,mode=0)
         except Exception as e:
-            formResult = {"resultinfo":f'“{datasetname}”数据集评测启动失败，存储空间构建失败！{e}'}
+            formResult = {"resultinfo":f'“{datasetname}”数据集评测启动失败，存储空间构建失败！{e}',"status":2}
             print('Abnormal Reponse:',formResult)
             traceback.print_exc()
             return jsonify(formResult)
@@ -62,12 +62,12 @@ def metric():
                 process = subprocess.Popen(command, stdout=file, stderr=file, cwd='.')
         except Exception as e:
             deal_dir(datasetname,mode=1)
-            formResult = {"resultinfo":f'“{datasetname}”数据集评测启动失败，评测程序启动失败！{e}'}
+            formResult = {"resultinfo":f'“{datasetname}”数据集评测启动失败，评测程序启动失败！{e}',"status":2}
             print('Abnormal Reponse:',formResult)
             traceback.print_exc()
             return jsonify(formResult)
 
-        formResult = {"resultinfo":f'“{datasetname}”数据集评测开始！'}
+        formResult = {"resultinfo":f'“{datasetname}”数据集评测开始！',"status":1}
         print('Normal Reponse:',formResult)
         return jsonify(formResult)
 
@@ -78,24 +78,24 @@ def result():
     if request.method == "POST":
         json_dict = request.get_data(as_text=True)
         json_dict = json.loads(json_dict)
-        username = json_dict.get('id')
+        # username = json_dict.get('id')
         datasetname = json_dict.get('name')
 
         # 检查是否存在目录
-        dataset_dir,result_dir,exist=deal_dir(username,datasetname,mode=2)
+        dataset_dir,result_dir,exist=deal_dir(datasetname,mode=2)
         if not exist:
-            formResult = {"resultinfo":f'{username}的“{datasetname}”数据集不存在！',"result":{}}
+            formResult = {"resultinfo":f'“{datasetname}”数据集不存在！',"result":{}}
             print('Abnormal Reponse:',formResult)
             return jsonify(formResult)
         # 如果没完成
         result_file=os.path.join(result_dir,'result.json')
         if not os.path.exists(result_file):
-            formResult = {"resultinfo":f'{username}的“{datasetname}”数据集评测未完成！',"result":{}}
+            formResult = {"resultinfo":f'“{datasetname}”数据集评测未完成！',"result":{}}
             print('Normal Reponse:',formResult)
             return jsonify(formResult)
         # 如果已完成
         result=json.load(open(result_file,'r',encoding='utf-8'))
-        formResult = {"resultinfo":f'{username}的“{datasetname}”数据集评测完成！',"result":result}
+        formResult = {"resultinfo":f'“{datasetname}”数据集评测完成！',"result":result}
         print('Normal Reponse:',formResult)
         return jsonify(formResult)
 
