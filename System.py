@@ -4,18 +4,19 @@ from flask import Flask,request,jsonify
 import json
 import shutil
 import traceback
+from datetime import datetime
+
 
 # 后端服务启动
 app = Flask(__name__)
-
-def deal_dir(datasetname,mode):
+def deal_dir(datasetname,formatted_date,mode):
     """0建立1删除2检查是否存在"""
     dataset_dir=f'data/dataset/{datasetname}'
-    result_dir=f'data/result/{datasetname}'
+    result_dir=f'data/result/{datasetname}/{formatted_date}'
     if mode==0:
         os.makedirs(result_dir,exist_ok=True)
     elif mode==1:
-        shutil.rmtree(dataset_dir)
+        # shutil.rmtree(dataset_dir)
         shutil.rmtree(result_dir)
     elif mode==2:
         pass
@@ -43,10 +44,13 @@ def metric():
             print('Abnormal Reponse:',formResult)
             traceback.print_exc()
             return jsonify(formResult)
-        
+        # 获取当前日期和时间
+        now = datetime.now()
+        # 格式化输出
+        formatted_date = now.strftime("%Y-%m-%d_%H:%M:%S.%f")[:-3] 
         # 构建专属空间
         try:
-            dataset_dir,result_dir,_=deal_dir(datasetname,mode=0)
+            dataset_dir,result_dir,_=deal_dir(datasetname,formatted_date,mode=0)
         except Exception as e:
             formResult = {"resultinfo":f'“{datasetname}”数据集评测启动失败，存储空间构建失败！{e}',"status":2}
             print('Abnormal Reponse:',formResult)
@@ -54,14 +58,16 @@ def metric():
             return jsonify(formResult)
         # 启动评测
         try:
+            print(result_dir)
             with open(f'{result_dir}/metric.log', 'w') as file:
                 # 创建子进程，将输出重定向到文件
                 command = ["python", "ServiceMain.py", 
                         "--metadata", metadata,
-                        "--datasetname", datasetname]
+                        "--datasetname", datasetname,
+                        "--taskdate",formatted_date]
                 process = subprocess.Popen(command, stdout=file, stderr=file, cwd='.')
         except Exception as e:
-            deal_dir(datasetname,mode=1)
+            deal_dir(datasetname,formatted_date,mode=1)
             formResult = {"resultinfo":f'“{datasetname}”数据集评测启动失败，评测程序启动失败！{e}',"status":2}
             print('Abnormal Reponse:',formResult)
             traceback.print_exc()
@@ -81,12 +87,17 @@ def result():
         # username = json_dict.get('id')
         datasetname = json_dict.get('name')
 
-        # 检查是否存在目录
-        dataset_dir,result_dir,exist=deal_dir(datasetname,mode=2)
-        if not exist:
-            formResult = {"resultinfo":f'“{datasetname}”数据集不存在！',"result":{}}
+        result_dir=f'data/result/{datasetname}'
+        # 列举所有评测结果目录
+        folders = [f for f in os.listdir(result_dir) if os.path.isdir(os.path.join(result_dir, f))]
+        if not os.path.exists(result_dir)  or len(folders)==0:
+            formResult = {"resultinfo":f'“{datasetname}”数据集评测不存在！',"result":{}}
             print('Abnormal Reponse:',formResult)
             return jsonify(formResult)
+        # 按文件夹名称的字典序排序，并找到最新的一次
+        folders_sorted = sorted(folders)
+        result_dir = os.path.join(result_dir,folders_sorted[-1])
+
         # 如果没完成
         result_file=os.path.join(result_dir,'result.json')
         if not os.path.exists(result_file):

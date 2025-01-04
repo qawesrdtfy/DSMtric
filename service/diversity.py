@@ -263,7 +263,7 @@ def vocabulary_richness(data:Data):
         filtered_words = [word for word in words if word not in stop_words]
         word_counts = Counter(filtered_words)
         global_word_counts.update(word_counts)
-    print(global_word_counts)
+    # print(global_word_counts)
     frequencies = np.array(list(global_word_counts.values()))
     score = 1-compute_gini(frequencies)
     return round(score,3)
