@@ -88,9 +88,11 @@ def result():
         datasetname = json_dict.get('name')
 
         result_dir=f'data/result/{datasetname}'
-        # 列举所有评测结果目录
-        folders = [f for f in os.listdir(result_dir) if os.path.isdir(os.path.join(result_dir, f))]
-        if not os.path.exists(result_dir)  or len(folders)==0:
+        try:
+            # 列举所有评测结果目录
+            folders = [f for f in os.listdir(result_dir) if os.path.isdir(os.path.join(result_dir, f))]
+            assert(len(folders)>0)
+        except:
             formResult = {"resultinfo":f'“{datasetname}”数据集评测不存在！',"result":{}}
             print('Abnormal Reponse:',formResult)
             return jsonify(formResult)
