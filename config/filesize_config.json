@@ -1,0 +1,7 @@
+{
+    "video":4096,
+    "audio":4096,
+    "image":1024,
+    "csv":2,
+    "text-length":8192
+}

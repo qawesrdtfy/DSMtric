@@ -405,7 +405,7 @@ def structure_discrete_diversity(data:Data):
         # 计算最大熵
         max_entropy = math.log2(len(probabilities))
         # 标准化熵值
-        normalized_entropy = entropy / max_entropy
+        normalized_entropy = entropy / (max_entropy + 1e-5)
 
         entropys.append(normalized_entropy)
     result = sum(entropys) / len(entropys)

@@ -17,8 +17,12 @@ class Data:
     def __init__(self, data: dict, dataset_dir: str) -> None:
         # X的模态：结构化数据、文本、图像、音频、视频、语音
         self.X_modal = data.get('X_modal', [])
+        if not isinstance(self.X_modal,list):
+            self.X_modal=[self.X_modal]
         # Y的模态：类别、文本、图像、音频、视频、语音、图像目标
         self.Y_modal = data.get('Y_modal', [])
+        if not isinstance(self.Y_modal,list):
+            self.Y_modal=[self.Y_modal]
         # 标注规则
         self.rule = self._get_rule(dataset_dir)
         # 每个样本的主题
