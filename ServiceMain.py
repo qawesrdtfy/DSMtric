@@ -28,11 +28,23 @@ def trig(data):
     return cons_trigged,divers_trigged,norma_trigged
 
 def get_level(num:float):
-    if num>=0.9:return "A"
-    if num>=0.8:return "B"
-    if num>=0.7:return "C"
-    if num>=0.6:return "D"
-    return "E"
+    """
+    将数字转化为  [ABCDE等级制度, 五分制, 十分制, 百分制]
+    """
+    if num<0: return ["-","-","-"]
+    ans=[]
+    if num>=0.9:ans.append("A")
+    elif num>=0.8:ans.append("B")
+    elif num>=0.7:ans.append("C")
+    elif num>=0.6:ans.append("D")
+    else: ans.append("E")
+
+    ans.append("{:.1f}".format(num * 5))
+    ans.append("{:.1f}".format(num * 10))
+    ans.append("{:.1f}".format(num * 100))
+
+    return ans
+    
 
 def compute(data,cons_trigged,divers_trigged,norma_trigged):
     """
@@ -113,19 +125,19 @@ def main(args):
     # 保存结果和完成标识
     result={
         "总分":get_level(final_score),
-        "一致性得分":get_level(cons_score),
-        "多样性得分":get_level(divers_score),
-        "规范性得分":get_level(norma_score)
+        "一致性":{"总分":get_level(cons_score)},
+        "多样性":{"总分":get_level(divers_score)},
+        "规范性":{"总分":get_level(norma_score)}
     }
     for i,item in enumerate(consistency_funclist):
         if cons_trigged[i]:
-            result[item[0]]=get_level(cons_scores[i])
+            result["一致性"][item[0]]=get_level(cons_scores[i])
     for i,item in enumerate(diversity_funclist):
         if divers_trigged[i]:
-            result[item[0]]=get_level(divers_scores[i])
+            result["多样性"][item[0]]=get_level(divers_scores[i])
     for i,item in enumerate(normative_funclist):
         if norma_trigged[i]:
-            result[item[0]]=get_level(norma_scores[i])
+            result["规范性"][item[0]]=get_level(norma_scores[i])
     json.dump(result,open(result_dir+f'/{taskdate}/result.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
     print(f'“{args.datasetname}”数据集评测完成')
 
