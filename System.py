@@ -79,6 +79,10 @@ def metric():
 
     return 'connection ok!'
 
+@app.route("/api/datasets",methods=['post','get'])
+def all_datasets():
+    return [f for f in os.listdir('data/dataset') if os.path.isdir(os.path.join('data/dataset', f))]
+
 @app.route("/api/result",methods=['post','get'])
 def result():
     if request.method == "POST":
@@ -102,13 +106,19 @@ def result():
 
         # 如果没完成
         result_file=os.path.join(result_dir,'result.json')
+        log_file=os.path.join(result_dir,'metric.log')
+        try:
+            metriclog=open(log_file,'r',encoding='utf-8').read()
+        except:
+            metriclog="暂无日志"
+        
         if not os.path.exists(result_file):
-            formResult = {"resultinfo":f'“{datasetname}”数据集评测未完成！',"result":{}}
+            formResult = {"resultinfo":f'“{datasetname}”数据集评测未完成！', "result":{}, "log":metriclog}
             print('Normal Reponse:',formResult)
             return jsonify(formResult)
         # 如果已完成
         result=json.load(open(result_file,'r',encoding='utf-8'))
-        formResult = {"resultinfo":f'“{datasetname}”数据集评测完成！',"result":result}
+        formResult = {"resultinfo":f'“{datasetname}”数据集评测完成！', "result":result, "log":metriclog}
         print('Normal Reponse:',formResult)
         return jsonify(formResult)
 
