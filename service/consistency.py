@@ -112,6 +112,7 @@ def audiocontent_consistency(data: Data):
     这个函数运行的很慢！严重拖慢了音频模态相关的指标计算过程。
     """
     all_scores = []
+    maxone=0
     for sample in data.Y_per_annotater['音频']:
         scores = []
         mfcc_sample = [mfcc(y=one).flatten() for one in sample]
@@ -120,11 +121,12 @@ def audiocontent_consistency(data: Data):
                 print(mfcc_sample[i])
                 print(mfcc_sample[i].shape)
                 d = dtw.distance(mfcc_sample[i], mfcc_sample[j])
+                maxone=d if d>maxone else maxone
                 scores.append(d)
         score = sum(scores)/len(scores)
         all_scores.append(score)
     final_score = round(sum(all_scores)/len(all_scores), 4)
-    return 1-min(zoom(final_score, 0, 2), 1)  # 这里的2是个超参数
+    return 1-min(zoom(final_score, 0, maxone), 1)  # 这里的2是个超参数
 
 
 def trig_image_text_consistancy(data: Data):
