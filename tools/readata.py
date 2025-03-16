@@ -54,11 +54,33 @@ def read_picture(path):  # -> list[np.ndarray]
     return samples
 
 
+def split_audio_to_fixed_frames(y, frame_length, hop_length):
+    """
+    将音频分割成固定长度的帧
+    :param y: 音频信号
+    :param frame_length: 每帧的长度（样本数）
+    :param hop_length: 帧移（样本数）
+    :return: 分割后的帧列表
+    """
+    frames = []
+    for i in range(0, len(y), hop_length):
+        frame = y[i:i + frame_length]
+        if len(frame) < frame_length:
+            frame = np.pad(frame, (0, frame_length - len(frame)), mode='constant')
+        frames.append(frame)
+    frames=np.vstack(frames)
+    frames=np.mean(frames,axis=1)
+    return frames
+
 def read_audio(path):  # -> list[np.ndarray]
     files = [os.path.join(path, one) for one in os.listdir(path)]
     files.sort()
     checksize(files,'audio')
-    samples = [librosa.load(file, sr=None)[0] for file in files]
+    samples = []
+    for file in files:
+        y,sr=librosa.load(file, sr=None)
+        y=split_audio_to_fixed_frames(y,sr//2,sr//8)
+        samples.append(y)
     return samples
 
 
