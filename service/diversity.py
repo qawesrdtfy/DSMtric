@@ -157,6 +157,8 @@ def trig_audioLength_diversity(data:Data) -> bool:
     """
     if data.X_modal == ["音频"]:
         return True
+    if data.X_modal == ["语音"]:
+        return True
     return False
 def audioLength_diversity(data:Data):
     """
@@ -164,7 +166,7 @@ def audioLength_diversity(data:Data):
     :param X: 音频数据
     :return: 音频长度多样性得分，范围0～1
     """
-    audios = data.X["音频"]
+    audios = data.X[data.X_modal[0]]
     length = []
     for i,item in enumerate(audios):
         length.append(item.shape)
@@ -355,6 +357,8 @@ def trig_audio_content_diversity(data:Data) -> bool:
     """
     if data.X_modal==["音频"]:
         return True
+    if data.X_modal==["语音"]:
+        return True
     return False
 def audio_content_diversity(data:Data):
     """
@@ -362,8 +366,8 @@ def audio_content_diversity(data:Data):
     :param X: 每个样本，要求是音频
     :return: MFCC特征的余弦距离矩阵，取值范围为[0-1]  越高表示多样性越高
     """
-    audio_samples=data.X['音频']
-    audio_samples_file=data.X['音频地址']
+    audio_samples=data.X[data.X_modal[0]]
+    audio_samples_file=data.X[data.X_modal[0]+'地址']
     features=[]
     for audio_sample,audio_sample_file in zip(audio_samples,audio_samples_file):
         sr = librosa.get_samplerate(audio_sample_file)  # 获取采样率

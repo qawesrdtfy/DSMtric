@@ -101,6 +101,8 @@ def trig_audiocontent_consistency(data: Data) -> bool:
     """
     if data.Y_modal == ['音频'] and len(data.Y_per_annotater['音频']) != 0:
         return True
+    if data.Y_modal == ['语音'] and len(data.Y_per_annotater['语音']) != 0:
+        return True
     return False
 
 
@@ -112,7 +114,7 @@ def audiocontent_consistency(data: Data):
     这个函数运行的很慢！严重拖慢了音频模态相关的指标计算过程。
     """
     all_scores = []
-    for sample in data.Y_per_annotater['音频']:
+    for sample in data.Y_per_annotater[data.Y_modal[0]]:
         scores = []
         mfcc_sample = [mfcc(y=one).flatten() for one in sample]
         for i in range(len(mfcc_sample)):
@@ -228,6 +230,8 @@ def trig_audiofeature_consistency(data: Data) -> bool:
     """
     if data.Y_modal == ['音频'] and len(data.Y_per_annotater['音频']) != 0:
         return True
+    if data.Y_modal == ['语音'] and len(data.Y_per_annotater['语音']) != 0:
+        return True
     return False
 
 
@@ -238,7 +242,7 @@ def audiofeature_consistency(data: Data):
     :return: 内容一致性得分，范围0～1
     """
     all_scores = []
-    for sample in data.Y_per_annotater['音频']:
+    for sample in data.Y_per_annotater[data.Y_modal[0]]:
         encoded_sample = ask_AudioEncoder(sample)
         cos_matrix = cosine_similarity(encoded_sample)
         np.fill_diagonal(cos_matrix, 0)
@@ -437,13 +441,13 @@ def spearman_consistency(data: Data):
 
 def trig_audio_text_consistancy(data: Data):
     '''
-    音文内容一致性的触发函数  --音频转文本模型，BLEU相似度
+    音文内容一致性的触发函数  --语音转文本模型，BLEU相似度
     :X_modal
     :Y_modal
     :return:bool
     '''
-    if data.Y_modal == ['音频'] and data.X_modal == ['文本'] or \
-            data.X_modal == ['音频'] and data.Y_modal == ['文本']:
+    if data.Y_modal == ['语音'] and data.X_modal == ['文本'] or \
+            data.X_modal == ['语音'] and data.Y_modal == ['文本']:
         return True
     return False
 
@@ -454,11 +458,11 @@ def ASR_consistancy(data: Data):
     :return : BLEU分数范围0～1
     """
     all_scores = []
-    if data.Y_modal == ['文本'] and data.X_modal == ['音频']:
-        audios = data.X['音频地址']
+    if data.Y_modal == ['文本'] and data.X_modal == ['语音']:
+        audios = data.X['语音地址']
         docs = data.Y['文本']
     else:
-        audios = data.Y['音频地址']
+        audios = data.Y['语音地址']
         docs = data.X['文本']
     for i, item in enumerate(audios):
         text = ask_WhisperModel(item)
