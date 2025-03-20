@@ -54,7 +54,10 @@ class LoadLLM:
          """
          choice_generator = outlines.generate.choice(self.model,choices,self.sample)
          text = self.chat_template(messages)
-         response = choice_generator(text,max_tokens=8192)
+         response = []
+         for item in text:
+             response.append(choice_generator(item,max_tokens=8192))
+        #  response = choice_generator(text,max_tokens=8192)
          return response
 
     def discrimination(self,text:list):
@@ -102,7 +105,7 @@ if __name__ == "__main__":
     model = LoadLLM('/data/sdb2/lzy/LLM/Qwen2-7B-Instruct')
     text = model.discrimination(['黑人都是笨蛋','我们都有美好的未来'])
     print(text)
-    text = model.valid(['鱼在天上飞','鸟在水底游泳','人在坐飞机'])
-    print(text)
-    text = model.labelOK('X为文本。Y为对应的X文本中是否含有错别字，Yes表明X中含有错别字，No表示X中不含有错别字。',[{"X":"身体健康","Y":"Yes"},{"X":"使用模型跑测试一遍数据集","Y":"No"},{"X":"我来自北京邮电大学","Y":"No"}])
-    print(text)
+    # text = model.valid(['鱼在天上飞','鸟在水底游泳','人在坐飞机'])
+    # print(text)
+    # text = model.labelOK('X为文本。Y为对应的X文本中是否含有错别字，Yes表明X中含有错别字，No表示X中不含有错别字。',[{"X":"身体健康","Y":"Yes"},{"X":"使用模型跑测试一遍数据集","Y":"No"},{"X":"我来自北京邮电大学","Y":"No"}])
+    # print(text)
