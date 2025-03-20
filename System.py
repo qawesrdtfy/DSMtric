@@ -83,6 +83,10 @@ def metric():
 def all_datasets():
     return [f for f in os.listdir('data/dataset') if os.path.isdir(os.path.join('data/dataset', f))]
 
+@app.route("/api/datasets_result",methods=['post','get'])
+def all_datasets_result():
+    return [f for f in os.listdir('data/result') if os.path.isdir(os.path.join('data/result', f))]
+
 @app.route("/api/result",methods=['post','get'])
 def result():
     if request.method == "POST":
