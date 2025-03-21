@@ -6,8 +6,10 @@ class VLmodel:
     加载QwenVL模型
     """
     def __init__(self,modelname) -> None:
+        min_pixels = 256 * 28 * 28
+        max_pixels = 1280 * 28 * 28
         self.model = Qwen2VLForConditionalGeneration.from_pretrained(modelname, torch_dtype="auto", device_map="auto")
-        self.processor = AutoProcessor.from_pretrained(modelname)
+        self.processor = AutoProcessor.from_pretrained(modelname,min_pixels=min_pixels, max_pixels=max_pixels)
         self.device = "cuda"
     
     def askmodel(self,prompt,imageurl):
@@ -52,8 +54,8 @@ if __name__ == "__main__":
     for test
     """
     import jieba
-    vLmodel = VLmodel('/data/sdb2/lzy/LLM/Qwen2-VL-7B-Instruct')
-    ans = vLmodel.askmodel("请你用一句话描述一下图片的内容。注意！不需要出现类似于“这是一幅...”的描述。","https://c-ssl.duitang.com/uploads/blog/202304/03/20230403101857_d328e.jpg")
+    vLmodel = VLmodel('/data/sdb2/lzy/LLM/Qwen2-VL-2B-Instruct')
+    ans = vLmodel.askmodel("请你用一句话描述一下图片的内容。注意！不需要出现类似于“这是一幅...”的描述。","1.jpg")
     from rouge_chinese import Rouge
     rouge = Rouge()
     print(ans)
