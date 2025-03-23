@@ -9,7 +9,7 @@ class PicEncoder:
         self.device = device
 
     def encode(self, pic_paths:list) -> list:
-        images=[Image.open(open(path,'rb')) for path in pic_paths]
+        images=[Image.open(open(path,'rb')).convert('RGB') for path in pic_paths]
         inputs = self.processor(images=images, return_tensors="pt").to(self.device)
         outputs = self.model(**inputs)
         logits = outputs.logits

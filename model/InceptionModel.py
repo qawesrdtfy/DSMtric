@@ -27,7 +27,7 @@ class InceptionModelV3:
         :param images: PIL Image列表
         :return: 预测结果（概率分布）
         """
-        images = [Image.open(pic_path) for pic_path in pic_paths]
+        images = [Image.open(pic_path).convert('RGB') for pic_path in pic_paths]
         preds = []
         for img in images:
             input_tensor = self.preprocess_image(img)
@@ -37,7 +37,6 @@ class InceptionModelV3:
         return np.concatenate(preds, axis=0).tolist()
 if __name__ == "__main__":
     image_paths = ["testdata/image/image1.jpg", "testdata/image/image2.jpg"]  # 替换为实际的图片路径
-    
 
     # 创建InceptionModel对象
     model = InceptionModelV3('cuda')
