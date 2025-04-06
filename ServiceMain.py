@@ -10,10 +10,14 @@ import logging
 
 # 配置日志
 logging.basicConfig(
-    level=logging.DEBUG,  # 设置日志级别
+    level=logging.INFO,  # 设置日志级别
     format='%(asctime)s - %(levelname)s - %(message)s',  # 设置日志格式
     datefmt='%Y-%m-%d %H:%M:%S'  # 设置时间格式
 )
+# 获取第三方库的日志记录器并设置日志级别
+logging.getLogger("urllib3").setLevel(logging.WARNING)  # urllib3 是 requests 的依赖
+logging.getLogger("requests").setLevel(logging.WARNING)  # 如果直接使用 requests
+logging.getLogger("jieba").setLevel(logging.WARNING)  # 如果直接使用 requests
 
 def trig(data):
     """
@@ -23,19 +27,22 @@ def trig(data):
     """
     cons_trigged=[tfunc(data) for name,tfunc,_ in consistency_funclist]
     # print('\n[INFO] 一致性指标可用性')
-    logging.info("一致性指标可用性")
+    logging.info("\n\n一致性指标可用性")
     for i,item in enumerate(consistency_funclist):
-        print(f"{item[0]} : {cons_trigged[i]}")
+        # print(f"{item[0]} : {cons_trigged[i]}")
+        logging.info(f"{item[0]} : {cons_trigged[i]}")
     divers_trigged=[tfunc(data) for name,tfunc,_ in diversity_funclist]
     # print('\n[INFO] 多样性指标可用性')
-    logging.info("多样性指标可用性")
+    logging.info("\n\n多样性指标可用性")
     for i,item in enumerate(diversity_funclist):
-        print(f"{item[0]} : {divers_trigged[i]}")
+        # print(f"{item[0]} : {divers_trigged[i]}")
+        logging.info(f"{item[0]} : {divers_trigged[i]}")
     norma_trigged=[tfunc(data) for name,tfunc,_ in normative_funclist]
     # print('\n[INFO] 规范性指标可用性')
-    logging.info("规范性指标可用性")
+    logging.info("\n\n规范性指标可用性")
     for i,item in enumerate(normative_funclist):
-        print(f"{item[0]} : {norma_trigged[i]}")
+        # print(f"{item[0]} : {norma_trigged[i]}")
+        logging.info(f"{item[0]} : {norma_trigged[i]}")
     return cons_trigged,divers_trigged,norma_trigged
 
 def get_level(num:float):
@@ -129,7 +136,9 @@ def main(args):
     logging.info('计算每个指标的分数')
     cons_scores, divers_scores, norma_scores=compute(data, cons_trigged, divers_trigged, norma_trigged)
     # print(cons_scores,divers_scores,norma_scores)
-    logging.info(cons_scores,divers_scores,norma_scores)
+    logging.info(cons_scores)
+    logging.info(divers_scores)
+    logging.info(norma_scores)
     # print('计算每类指标的分数和总分')
     logging.info('计算每类指标的分数和总分')
     pure_cons_scores=[one*weight[consistency_funclist[i][0]] for i,one in enumerate(cons_scores) if one!=-1]
