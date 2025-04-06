@@ -8,6 +8,14 @@ from PIL import Image
 from tools.askmodel import *
 import numpy
 import pandas as pd
+import logging
+
+# 配置日志
+logging.basicConfig(
+    level=logging.DEBUG,  # 设置日志级别
+    format='%(asctime)s - %(levelname)s - %(message)s',  # 设置日志格式
+    datefmt='%Y-%m-%d %H:%M:%S'  # 设置时间格式
+)
 
 def trig_class_diversity(data:Data) -> bool:
     """
@@ -69,11 +77,11 @@ def inception_score(data:Data):
     image_path=data.X['图像地址']
     preds = ask_Inception(image_path)
     preds=numpy.array(preds)
-    print(preds.shape)
+    # print(preds.shape)
     splits=1
     n = preds.shape[0]
     if splits > n:
-        print(f"Warning: splits ({splits}) is greater than number of images ({n}). Setting splits to {n}.")
+        logging.warning(f"Warning: splits ({splits}) is greater than number of images ({n}). Setting splits to {n}.")
         splits = n
     # 计算每个split的得分
     split_scores = []
@@ -137,9 +145,10 @@ def videoLength_diversity(data:Data):
     length = []
     proportion = []
     for i,item in enumerate(videos):
-        length.append(item.get_length())
-        meta = item.metadata()
-        width, height = meta['video_size']
+        length.append(item.shape[0])
+        # meta = item.metadata()
+        # width, height = meta['video_size']
+        width, height = item.shape[2], item.shape[1]
         proportion.append(width/height)
     probsL = spread_probs(length)
     probsP = spread_probs(proportion)
@@ -291,6 +300,8 @@ def color_diversity(data:Data):
     images=data.X['图像']
     total_entropy = 0
     for image in images:
+        if len(image.shape) == 2:
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
         color_hist = extract_color_histogram(image,n_bins)
         image_entropy = entropy(color_hist)
         total_entropy += image_entropy

@@ -17,7 +17,7 @@ class FileTooLargeError(Exception):
 def checksize(files,modal):
     MAXSIZE=filesize[modal]*1024
     for file in files:
-        print(file)
+        # print(file)
         file_size=os.path.getsize(file)
         if(file_size>MAXSIZE):
             raise FileTooLargeError(file_size, MAXSIZE)

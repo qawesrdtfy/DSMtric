@@ -65,7 +65,14 @@ def metric():
                         "--metadata", metadata,
                         "--datasetname", datasetname,
                         "--taskdate",formatted_date]
-                process = subprocess.Popen(command, stdout=file, stderr=file, cwd='.')
+                process = subprocess.Popen(
+                    command,
+                    stdout=file,
+                    stderr=subprocess.STDOUT,  # 将标准错误也重定向到文件
+                    cwd='.',
+                    close_fds=True  # 关闭不必要的文件描述符
+                )
+                
         except Exception as e:
             deal_dir(datasetname,formatted_date,mode=1)
             formResult = {"resultinfo":f'“{datasetname}”数据集评测启动失败，评测程序启动失败！{e}',"status":2}

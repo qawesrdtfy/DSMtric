@@ -13,6 +13,7 @@ from tools.askmodel import *
 from config.Data import Data
 import jieba
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
+import math
 rouge = Rouge()
 
 
@@ -120,8 +121,8 @@ def audiocontent_consistency(data: Data):
         mfcc_sample = [mfcc(y=one).flatten() for one in sample]
         for i in range(len(mfcc_sample)):
             for j in range(i+1, len(mfcc_sample)):
-                print(mfcc_sample[i])
-                print(mfcc_sample[i].shape)
+                # print(mfcc_sample[i])
+                # print(mfcc_sample[i].shape)
                 d = dtw.distance(mfcc_sample[i], mfcc_sample[j])
                 maxone=d if d>maxone else maxone
                 scores.append(d)
@@ -138,8 +139,8 @@ def trig_image_text_consistancy(data: Data):
     :Y_modal
     :return:bool
     '''
-    if data.Y_modal == ['文本'] and data.X_modal == ['图像'] or \
-            data.X_modal == ['文本'] and data.Y_modal == ['图像']:
+    if data.Y_modal == ['文本'] and data.X_modal == ['图像'] and len(data.Y_per_annotater['文本']) != 0 or \
+            data.X_modal == ['文本'] and data.Y_modal == ['图像'] and len(data.Y_per_annotater['图像']) != 0:
         return True
     return False
 
@@ -261,7 +262,7 @@ def trig_picfeature_consistency(data: Data) -> bool:
     :param Y_per_annotater: 每个样本每个标注员的标注结果
     :return: 是否触发，bool
     """
-    if data.Y_modal == ['图像']:
+    if data.Y_modal == ['图像'] and len(data.Y_per_annotater['图像']) != 0 :
         return True
     return False
 
@@ -373,7 +374,7 @@ def trig_person_consistency(data: Data) -> bool:
     :param Y_modal: Y的模态
     :return: 是否触发，bool
     """
-    modals = ['文本', '音频', '图像']  # TODO 后期还会有语音、视频，当然需要对应修改下面的计算函数
+    modals = ['文本', '音频', '图像', '语音']  # TODO 后期还会有语音、视频，当然需要对应修改下面的计算函数
     if len(data.Y_modal) == 1 and data.Y_modal[0] in modals and \
             len(data.X_modal) == 1 and data.X_modal[0] in modals:
         return True
@@ -390,6 +391,7 @@ def person_consistency(data: Data):
     modal2func = {
         "文本": ask_DocEncoder,
         "音频": ask_AudioEncoder,
+        "语音": ask_AudioEncoder,
         "图像": ask_PicEncoder
     }
     X_embeded = modal2func[data.X_modal[0]](data.X[data.X_modal[0]]) if data.X_modal[0] not in [
@@ -410,7 +412,7 @@ def trig_spearman_consistency(data: Data) -> bool:
     :param Y_modal: Y的模态
     :return: 是否触发，bool
     """
-    modals = ['文本', '音频', '图像']  # TODO 后期还会有语音、视频，当然需要对应修改下面的计算函数
+    modals = ['文本', '音频', '图像', '语音']  # TODO 后期还会有语音、视频，当然需要对应修改下面的计算函数
     if len(data.Y_modal) == 1 and data.Y_modal[0] in modals and \
             len(data.X_modal) == 1 and data.X_modal[0] in modals:
         return True
@@ -427,6 +429,7 @@ def spearman_consistency(data: Data):
     modal2func = {
         "文本": ask_DocEncoder,
         "音频": ask_AudioEncoder,
+        "语音": ask_AudioEncoder,
         "图像": ask_PicEncoder
     }
     X_embeded = modal2func[data.X_modal[0]](data.X[data.X_modal[0]]) if data.X_modal[0] not in [
@@ -468,12 +471,11 @@ def ASR_consistancy(data: Data):
         docs = data.X['文本']
     for i, item in enumerate(audios):
         text = ask_WhisperModel(item)
-        textx = ' '.join(jieba.lcut(text))
-        texty = ' '.join(jieba.lcut(docs[i]))
-        score = sentence_bleu(
-            textx, texty, smoothing_function=SmoothingFunction().method1)
+        textx = jieba.lcut(text)
+        texty = jieba.lcut(docs[i])
+        score = sentence_bleu([textx], texty, weights=(0.2, 0.3, 0.5), smoothing_function=SmoothingFunction().method1)
         all_scores.append(score)
-    return round(sum(all_scores)/len(all_scores), 4)
+    return round(math.sqrt(sum(all_scores)/len(all_scores)), 4)
 
 
 def trig_length_annotation_consistency(data: Data) -> bool:
