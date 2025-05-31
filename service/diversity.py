@@ -9,6 +9,7 @@ from tools.askmodel import *
 import numpy
 import pandas as pd
 import logging
+from collections import defaultdict, Counter
 
 # 配置日志
 logging.basicConfig(
@@ -426,6 +427,63 @@ def structure_discrete_diversity(data:Data):
     result = sum(entropys) / len(entropys)
     return result
 
+def trig_text_label_diversity(data:Data):
+    """
+    文本标签均衡性 触发函数
+    """
+    if data.X_modal==["文本"] and data.Y_modal==["类别"]:
+        return True
+    return False
+
+def text_label_diversity(data:Data):
+    """
+    文本标签均衡性 实现
+    """
+    texts=data.X['文本']
+    labels=data.Y['类别']
+    data_new = pd.DataFrame({
+    'text': texts,    # 文本列
+    'label': labels   # 标签列
+    })
+    grouped = data_new.groupby('label')
+    all_trigrams = set()    
+    label_counters = defaultdict(Counter)
+    total_vars = []  # 记录总的方差
+    total_stds = []  # 记录总的标准差
+    for label, group in grouped:
+        counter = Counter()
+        for text in group['text']:
+            #加载停用词表处理数据，需要适用于中英文
+            stop_words = set(["的", "了", "是", "在", "和", "有", "为", "等",
+            '.', ',', '!', '?', ';', ':', "'", '"', '“', '”', '‘', '’', '【', '】',
+            '(', ')', '{', '}', '<', '>', '《', '》', '[', ']', '-', '–', '—', '_', 
+            '~', '`', '@', '#', '$', '%', '^', '&', '*', '+', '=', '|', '\\', '/', 
+            '、', '。', '，', '；', '：', '·',' '])
+            # 过滤掉停用词和长度小于等于1的词   
+            words = jieba.lcut(text)
+            words=[w for w in words if w.strip() and w not in stop_words]
+            trigrams=list(zip(words, words[1:], words[2:])) if len(words)>=3 else []
+            counter.update(trigrams)
+            all_trigrams.update(trigrams)
+            label_counters[label] = counter
+
+    for trigram in all_trigrams:
+            counts = []
+            for label in label_counters:
+                counts.append(label_counters[label].get(trigram, 0))
+                
+            var = np.var(counts)
+            std = np.std(counts)
+            
+            total_vars.append(var)
+            total_stds.append(std)
+        
+    # 计算均值
+    mean_var = np.mean(total_vars) if total_vars else 0
+    mean_std = np.mean(total_stds) if total_stds else 0
+    final_score=round((mean_var + mean_std) / 2, 4)
+    return final_score
+
 # 函数列表，元素为[指标名，触发函数，计算函数]
 diversity_funclist=[["类别多样性",trig_class_diversity,class_diversity],
                     ["主题多样性",trig_topic_diversity,topic_diversity],
@@ -439,5 +497,6 @@ diversity_funclist=[["类别多样性",trig_class_diversity,class_diversity],
                     ["颜色多样性",trig_color_diversity,color_diversity],
                     ["视觉特征多样性",trig_visual_feature_diversity,visual_feature_diversity],
                     ["音频内容多样性",trig_audio_content_diversity,audio_content_diversity],
-                    ["结构化数据离散值多样性",trig_structure_discrete_diversity,structure_discrete_diversity]
+                    ["结构化数据离散值多样性",trig_structure_discrete_diversity,structure_discrete_diversity],
+                    ["文本标签均衡性",trig_text_label_diversity,text_label_diversity]
                     ]

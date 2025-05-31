@@ -1,10 +1,11 @@
 {
-    "DocEncoder": false,
-    "VLmodel": false,
-    "PicEncoder": false,
-    "Clip_Sim": false,
-    "AudioEncoder": false,
-    "ASR": false,
-    "LoadLLM": false,
-    "MacBert": false
+    "DocEncoder": true,
+    "VLmodel": true,
+    "PicEncoder": true,
+    "Clip_Sim": true,
+    "AudioEncoder": true,
+    "ASR": true,
+    "LoadLLM": true,
+    "MacBert": true,
+    "Inception": true
 }

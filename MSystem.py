@@ -13,7 +13,7 @@ if config['DocEncoder']:
 else:
     docEncoder = None
 if config['VLmodel']:
-    vLmodel = VLmodel('/data/sdb2/lzy/LLM/Qwen2-VL-7B-Instruct')
+    vLmodel = VLmodel('/data/sdb2/lzy/LLM/Qwen2-VL-2B-Instruct')
 else:
     vLmodel = None
 if config['PicEncoder']:
@@ -33,7 +33,7 @@ if config['ASR']:
 else:
     ASRmodel = None
 if config['LoadLLM']:
-    Qwen2 = LoadLLM('/data/sdb2/lzy/LLM/Qwen2-7B-Instruct')
+    Qwen2 = LoadLLM('/data/sdb2/lzy/LLM/Qwen2.5-1.5B-Instruct')
 else:
     Qwen2 = None
 if config['MacBert']:
