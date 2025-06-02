@@ -37,19 +37,21 @@ class Data:
         X = {}
         for modal in self.X_modal:
             X[modal] = modal2func[modal](os.path.join(X_path, modal))
-        for modal in ['图像', '音频', '语音']:
+        for modal in ['图像', '音频', '语音', '视频']:
             if modal in self.X_modal:
                 X[modal+'地址'] = [os.path.join(X_path, modal, one)
                                  for one in os.listdir(os.path.join(X_path, modal))]
+                X[modal+'地址'].sort()
 
         Y_path = os.path.join(dataset_dir, 'Y')
         Y = {}
         for modal in self.Y_modal:
             Y[modal] = modal2func[modal](os.path.join(Y_path, modal))
-        for modal in ['图像', '音频', '语音']:
+        for modal in ['图像', '音频', '语音', '视频']:
             if modal in self.Y_modal:
                 Y[modal+'地址'] = [os.path.join(Y_path, modal, one)
                                  for one in os.listdir(os.path.join(Y_path, modal))]
+                X[modal+'地址'].sort()
         return X, Y
 
     def _get_Y_per_annotater(self, dataset_dir):
