@@ -139,8 +139,9 @@ def trig_image_text_consistancy(data: Data):
     :Y_modal
     :return:bool
     '''
-    if data.Y_modal == ['文本'] and data.X_modal == ['图像'] and len(data.Y_per_annotater['文本']) != 0 or \
-            data.X_modal == ['文本'] and data.Y_modal == ['图像'] and len(data.Y_per_annotater['图像']) != 0:
+    # if data.Y_modal == ['文本'] and data.X_modal == ['图像'] and len(data.Y_per_annotater['文本']) != 0 or \
+    #         data.X_modal == ['文本'] and data.Y_modal == ['图像'] and len(data.Y_per_annotater['图像']) != 0:
+    if (data.Y_modal == ['文本'] and data.X_modal == ['图像']) or (data.X_modal == ['文本'] and data.Y_modal == ['图像']):
         return True
     return False
 

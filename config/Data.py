@@ -51,7 +51,7 @@ class Data:
             if modal in self.Y_modal:
                 Y[modal+'地址'] = [os.path.join(Y_path, modal, one)
                                  for one in os.listdir(os.path.join(Y_path, modal))]
-                X[modal+'地址'].sort()
+                Y[modal+'地址'].sort()
         return X, Y
 
     def _get_Y_per_annotater(self, dataset_dir):
