@@ -380,14 +380,88 @@ def audio_content_diversity(data:Data):
     """
     audio_samples=data.X[data.X_modal[0]]
     audio_samples_file=data.X[data.X_modal[0]+'地址']
-    features=[]
-    for audio_sample,audio_sample_file in zip(audio_samples,audio_samples_file):
-        sr = librosa.get_samplerate(audio_sample_file)  # 获取采样率
-        mfcc = librosa.feature.mfcc(y=audio_sample, sr=sr)
-        features.append((mfcc.mean(axis=1)))
+    features = []
+
+    for audio_sample, audio_sample_file in zip(audio_samples, audio_samples_file):
+        # 基本健壮性检查
+        if audio_sample is None or len(audio_sample) == 0:
+            continue
+
+        # 获取采样率
+        try:
+            sr = librosa.get_samplerate(audio_sample_file)
+        except Exception:
+            # 获取失败，跳过该样本
+            continue
+
+        try:
+            non_silent_intervals = librosa.effects.split(audio_sample, top_db=30)
+        except Exception:
+            non_silent_intervals = []
+
+        if len(non_silent_intervals) > 0:
+            voiced = np.concatenate([audio_sample[s:e] for s, e in non_silent_intervals])
+        else:
+            voiced = audio_sample
+
+        if len(voiced) == 0:
+            continue
+
+        # -------- 2. 提取多种时频特征，并做统计汇总 --------
+        # MFCC
+        mfcc = librosa.feature.mfcc(y=voiced, sr=sr, n_mfcc=20)
+        mfcc_mean = mfcc.mean(axis=1)
+        mfcc_std = mfcc.std(axis=1)
+
+        # 频谱质心 & 带宽 & rolloff & 对比度
+        spec_centroid = librosa.feature.spectral_centroid(y=voiced, sr=sr)
+        spec_bw       = librosa.feature.spectral_bandwidth(y=voiced, sr=sr)
+        spec_rolloff  = librosa.feature.spectral_rolloff(y=voiced, sr=sr)
+        spec_contrast = librosa.feature.spectral_contrast(y=voiced, sr=sr)
+
+        def mean_std_feat(feat):
+            return np.concatenate([feat.mean(axis=1), feat.std(axis=1)])
+
+        sc_feat  = mean_std_feat(spec_centroid)
+        bw_feat  = mean_std_feat(spec_bw)
+        ro_feat  = mean_std_feat(spec_rolloff)
+        ct_feat  = mean_std_feat(spec_contrast)
+
+        # 汇总所有特征（维度大一点，有利于拉开样本间距离）
+        feat_vec = np.concatenate([mfcc_mean, mfcc_std,
+                                   sc_feat, bw_feat, ro_feat, ct_feat])
+
+        # 避免 NaN / inf
+        if not np.all(np.isfinite(feat_vec)):
+            continue
+
+        features.append(feat_vec)
+
+    # 有效样本太少，直接返回 0
+    if len(features) <1:
+        return 0.0
+
+    features = np.vstack(features)  # shape: (N, D)
+
+    # -------- 3. 计算样本间余弦距离矩阵 --------
     dist_matrix = pairwise_distances(features, metric='cosine')
-    score = np.mean(dist_matrix).item()  #单独一个样本  取0
-    return round(score,3)
+
+    n = dist_matrix.shape[0]
+    triu_idx = np.triu_indices(n, k=1)
+    upper_vals = dist_matrix[triu_idx]
+
+    if upper_vals.size == 0:
+        return 0.0
+
+    # 原始多样性分数（均值），通常会在 [0, 0.1] 左右
+    raw_score = upper_vals.mean().item()
+
+    scaled_score = np.sqrt(np.sqrt(max(0.0, min(1.0, raw_score))))
+
+    # 控制最终返回范围在 [0, 1]
+    scaled_score = max(0.0, min(1.0, scaled_score))
+
+    return round(scaled_score, 3)
 
 def trig_structure_discrete_diversity(data:Data) -> bool:
     """
