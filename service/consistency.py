@@ -160,10 +160,10 @@ def image_text_consistancy(data: Data):
         pictures = data.Y['图像地址']
         docs = data.X['文本']
     for i, item in enumerate(pictures):
-        text = ask_VLmodel("请你用简短的语言描述一下图片的内容。", [item])[0]
+        text = ask_VLmodel("请你用简短的语言描述一下图片的内容。例如：夕阳下男孩在奔跑\n老奶奶在过马\n\n", [item])[0]
         textx = ' '.join(jieba.lcut(text))
         texty = ' '.join(jieba.lcut(docs[i]))
-        all_scores.append(rouge.get_scores(textx, texty)[0]['rouge-l']['f'])
+        all_scores.append(rouge.get_scores(textx, texty)[0]['rouge-1']['f'])
     return round(sum(all_scores)/len(all_scores), 4)
 
 
@@ -404,7 +404,7 @@ def person_consistency(data: Data):
     person, _ = scipy.stats.pearsonr(X_cosmatrix, Y_cosmatrix)
     if np.isnan(person):
         return 0
-    return zoom(abs(person), -1, 1)
+    return math.sqrt(zoom(abs(person), -1, 1))
 
 
 def trig_spearman_consistency(data: Data) -> bool:
@@ -442,7 +442,7 @@ def spearman_consistency(data: Data):
     spearmanr, _ = scipy.stats.spearmanr(X_cosmatrix, Y_cosmatrix)
     if np.isnan(spearmanr):
         return 0
-    return zoom(abs(spearmanr), -1, 1)
+    return math.sqrt(zoom(abs(spearmanr), -1, 1))
 
 
 def trig_audio_text_consistancy(data: Data):

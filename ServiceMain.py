@@ -51,10 +51,10 @@ def get_level(num:float):
     """
     if num<0: return ["-","-","-"]
     ans=[]
-    if num>=0.9:ans.append("A")
-    elif num>=0.8:ans.append("B")
-    elif num>=0.7:ans.append("C")
-    elif num>=0.6:ans.append("D")
+    if num>=0.85:ans.append("A")
+    elif num>=0.7:ans.append("B")
+    elif num>=0.6:ans.append("C")
+    elif num>=0.4:ans.append("D")
     else: ans.append("E")
 
     ans.append("{:.1f}".format(num * 5))
@@ -79,7 +79,9 @@ def compute(data,cons_trigged,divers_trigged,norma_trigged):
             C1 = time.time()
             # print("[INFO] " + consistency_funclist[i][0] + "指标开始评测")
             logging.info(f"{consistency_funclist[i][0]} 指标开始评测")
-            cons_scores.append(one[2](data))
+            metric_score = one[2](data)
+            metric_score = 0.3 + metric_score*0.7
+            cons_scores.append(metric_score)
             # print("[INFO] " + consistency_funclist[i][0] + f"指标评测完成 总用时:{time.time()-C1}\n")
             logging.info(f"{consistency_funclist[i][0]} 指标评测完成 总用时:{time.time()-C1}\n")
         else:
@@ -92,7 +94,9 @@ def compute(data,cons_trigged,divers_trigged,norma_trigged):
             C1 = time.time()
             # print("[INFO] " + diversity_funclist[i][0] + "指标开始评测")
             logging.info(f"{diversity_funclist[i][0]} 指标开始评测")
-            divers_scores.append(one[2](data))
+            metric_score = one[2](data)
+            metric_score = 0.30 + metric_score*0.7
+            divers_scores.append(metric_score)
             # print("[INFO] " + diversity_funclist[i][0] + f"指标评测完成 总用时:{time.time()-C1}\n")
             logging.info(f"{diversity_funclist[i][0]} 指标评测完成 总用时:{time.time()-C1}\n")
         else:
@@ -105,7 +109,9 @@ def compute(data,cons_trigged,divers_trigged,norma_trigged):
             C1 = time.time()
             # print("[INFO] " + normative_funclist[i][0] + "指标开始评测")
             logging.info(f"{normative_funclist[i][0]} 指标开始评测")
-            norma_scores.append(one[2](data))
+            metric_score = one[2](data)
+            metric_score = 0.30 + metric_score*0.7
+            norma_scores.append(metric_score)
             # print("[INFO] " + normative_funclist[i][0] + f"指标评测完成 总用时:{time.time()-C1}\n")
             logging.info(f"{normative_funclist[i][0]} 指标评测完成 总用时:{time.time()-C1}\n")
         else:

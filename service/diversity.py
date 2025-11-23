@@ -125,8 +125,8 @@ def picShape_diversity(data:Data):
     scoreP, therangeP = shannon_entropy(probsP)
     score1 = zoom(scoreS,therangeS[0],therangeS[1])
     score2 = zoom(scoreP,therangeP[0],therangeP[1])
-    return (score1+score2)/2
-
+    return math.sqrt((score1+score2)/2
+)
 def trig_videoLength_diversity(data:Data) -> bool:
     """
     视频长度和尺寸比例多样性的触发函数
@@ -157,7 +157,7 @@ def videoLength_diversity(data:Data):
     scoreP, therangeP = shannon_entropy(probsP)
     score1 = zoom(scoreL,therangeL[0],therangeL[1])
     score2 = zoom(scoreP,therangeP[0],therangeP[1])
-    return (score1+score2)/2
+    return math.sqrt((score1+score2)/2)
 
 def trig_audioLength_diversity(data:Data) -> bool:
     """
@@ -183,7 +183,7 @@ def audioLength_diversity(data:Data):
     probs = spread_probs(length)
     score, therange = shannon_entropy(probs)
     score = zoom(score,therange[0],therange[1])
-    return score
+    return math.sqrt(score)
 
 def trig_length_diversity(data:Data) -> bool:
     """
@@ -208,7 +208,7 @@ def length_diversity(data:Data):
     prob_dist = prob_dist[prob_dist > 0]
     lengths_entropy = entropy(prob_dist, base=2)
     score=zoom(lengths_entropy,0,math.log2(len(lengths)))
-    return round(score,3)
+    return math.sqrt(round(score,3))
 
 def trig_vocabulary_diversity(data:Data) -> bool:
     """
@@ -239,9 +239,8 @@ def vocabulary_diversity(data:Data):
         total_ttr_values.extend(ttr_values)
         total_segments += len(ttr_values)
     score=sum(total_ttr_values) / total_segments if total_segments > 0 else 0
-    
     # 计算并返回 STTR
-    return round(score,3)
+    return math.sqrt(round(score,3))
 
 
 def trig_vocabulary_richness(data:Data) ->bool:
@@ -278,7 +277,8 @@ def vocabulary_richness(data:Data):
     # print(global_word_counts)
     frequencies = np.array(list(global_word_counts.values()))
     score = 1-compute_gini(frequencies)
-    return round(score,3)
+    score = 0.3 + 0.7 * score  #线性变换调整范围
+    return math.sqrt(round(score,3))
 
 
 def trig_color_diversity(data:Data) -> bool:
